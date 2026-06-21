@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as QrRouteImport } from './routes/qr'
 import { Route as PrintQrRouteImport } from './routes/print-qr'
+import { Route as LogoRouteImport } from './routes/logo'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
@@ -25,6 +26,11 @@ const QrRoute = QrRouteImport.update({
 const PrintQrRoute = PrintQrRouteImport.update({
   id: '/print-qr',
   path: '/print-qr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogoRoute = LogoRouteImport.update({
+  id: '/logo',
+  path: '/logo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryRoute = HistoryRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/history': typeof HistoryRoute
+  '/logo': typeof LogoRoute
   '/print-qr': typeof PrintQrRoute
   '/qr': typeof QrRoute
   '/api/export.csv': typeof ApiExportDotcsvRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/history': typeof HistoryRoute
+  '/logo': typeof LogoRoute
   '/print-qr': typeof PrintQrRoute
   '/qr': typeof QrRoute
   '/api/export.csv': typeof ApiExportDotcsvRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/history': typeof HistoryRoute
+  '/logo': typeof LogoRoute
   '/print-qr': typeof PrintQrRoute
   '/qr': typeof QrRoute
   '/api/export.csv': typeof ApiExportDotcsvRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/history'
+    | '/logo'
     | '/print-qr'
     | '/qr'
     | '/api/export.csv'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/history'
+    | '/logo'
     | '/print-qr'
     | '/qr'
     | '/api/export.csv'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/history'
+    | '/logo'
     | '/print-qr'
     | '/qr'
     | '/api/export.csv'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
   HistoryRoute: typeof HistoryRoute
+  LogoRoute: typeof LogoRoute
   PrintQrRoute: typeof PrintQrRoute
   QrRoute: typeof QrRoute
   ApiExportDotcsvRoute: typeof ApiExportDotcsvRoute
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/print-qr'
       fullPath: '/print-qr'
       preLoaderRoute: typeof PrintQrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logo': {
+      id: '/logo'
+      path: '/logo'
+      fullPath: '/logo'
+      preLoaderRoute: typeof LogoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/history': {
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
   HistoryRoute: HistoryRoute,
+  LogoRoute: LogoRoute,
   PrintQrRoute: PrintQrRoute,
   QrRoute: QrRoute,
   ApiExportDotcsvRoute: ApiExportDotcsvRoute,
