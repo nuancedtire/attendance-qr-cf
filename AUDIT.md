@@ -122,3 +122,25 @@ Items #1–#6 are labeled `auto-fix` (clear-cut, well-scoped). Items #7–#11 ar
 | #17 | #6, #7, #8, #9 | `agent/issue-group-6-error-handling-accessibility` | Error handling + accessibility |
 
 All 3 PRs built successfully. #1 already resolved by human merge.
+
+---
+
+## 2026-06-21 — Phase A+B (cron run 3)
+
+**Phase A — Discovery:** Scanned all 8 categories. Verified all previous items as genuinely resolved. Discovered 5 new issues:
+
+| # | Category | Title | Labels |
+|---|---|---|---|
+| #18 | doc-code drift | AGENTS.md project structure missing src/routes/-hooks.ts and src/types/ | needs-triage, auto-fix |
+| #19 | doc-code drift | about.tsx links to wrong GitHub repo (inout → attendance-qr-cf) | needs-triage, auto-fix |
+| #20 | error handling | index.tsx discards checkInAt from getStatus, relative-time badge never renders | needs-triage, auto-fix |
+| #21 | duplication | Identity picker modal duplicated verbatim between index.tsx and history.tsx | needs-triage |
+| #22 | accessibility | PIN input fields in index.tsx and history.tsx lack aria-label | needs-triage |
+
+**Phase B — Implementation (1 PR):**
+
+| PR | Issues | Branch | Title |
+|---|---|---|---|
+| #23 | #18, #19, #20 | `agent/issue-group-18-doc-and-bug-fixes` | Doc fixes and checkInAt bug |
+
+Build ✅. Issues #21 and #22 remain `needs-triage` — human must add `auto-fix`.

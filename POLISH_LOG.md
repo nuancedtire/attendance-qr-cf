@@ -128,3 +128,23 @@ Issues #1–#6 filed with `auto-fix`; #7–#11 filed as `needs-triage` only.
 - **PR #17 — Error handling + accessibility (#6, #7, #8, #9):** Added `.catch()` handlers to getStatus (index.tsx) and getStaffHistory (history.tsx) with user-visible error messages. Added loadError state and error banner to history page. Added `aria-label` to 8 unlabelled inputs across admin.tsx, index.tsx, print-qr.tsx, RotaStaffSection.tsx. Added `role="dialog"`, `aria-modal="true"`, `aria-labelledby` to 4 modal dialogs (identity picker and PIN entry in index.tsx and history.tsx). Added `role="alertdialog"` to ConfirmDialog. Added `aria-label="Close"` to modal close buttons and `aria-label="Dismiss"` to message toast button. Added keyboard navigation (ArrowLeft/Right, Home/End) and ARIA slider attributes (role, valuenow, valuemin, valuemax, valuetext) to SlideButton component. 7 files changed, 132 insertions. Build ✅.
 
 **Summary:** 11 of 11 auto-fix issues processed across 3 PRs. Issue #1 resolved by human merge. All builds passing.
+
+## 2026-06-21 (cron run 3 — self-upgrading Phase A+B)
+
+**Phase A — Discovery:** Scanned all 8 categories across the codebase. Verified all 17 AUDIT.md items as genuinely resolved. Discovered 5 new issues:
+- #18: Doc-code drift — AGENTS.md missing src/routes/-hooks.ts and src/types/ in project structure (auto-fix)
+- #19: Doc-code drift — about.tsx links to wrong repo `nuancedtire/inout` instead of `nuancedtire/attendance-qr-cf` (auto-fix)
+- #20: Bug — index.tsx discards checkInAt from getStatus, making the "how long ago" relative-time badge never render (auto-fix)
+- #21: Duplication — Identity picker modal ~100 lines duplicated between index.tsx and history.tsx (needs-triage)
+- #22: Accessibility — PIN inputs in index.tsx and history.tsx lack aria-label (needs-triage)
+
+**Phase B — Implementation (#18, #19, #20):**
+- PR #23: 3 files changed (AGENTS.md, about.tsx, index.tsx). 6 insertions, 2 deletions.
+  - #18: Added src/routes/-hooks.ts and src/types/ to AGENTS.md project structure
+  - #19: Fixed about.tsx GitHub link from `nuancedtire/inout` to `nuancedtire/attendance-qr-cf`
+  - #20: Removed `checkInAt: null` override in index.tsx getStatus handler, restoring relative-time badge display
+- Build ✅.
+
+**Remaining:** #21 and #22 are `needs-triage` — waiting for human to add `auto-fix` label.
+
+**Note:** Repo was renamed/moved from `attendance-qr-cf` to `inout` on GitHub. Both URLs work; canonical is now `nuancedtire/inout`.
