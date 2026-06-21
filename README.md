@@ -1,0 +1,80 @@
+# Attendance QR
+
+QR-code based check-in/check-out for a department ward. Built with TanStack Start + Cloudflare Workers + D1.
+
+## Flow
+
+1. Admin uploads the daily rota Excel on `/admin`.
+2. The system generates a daily QR code on `/qr`.
+3. Print the QR code and put it on the notice board.
+4. Staff scan the QR with their phone camera, select their name, and tap Check In / Check Out.
+5. Admin dashboard shows who is in and exports CSV.
+
+## Stack
+
+- TanStack Start (React)
+- Cloudflare Workers (Nitro `cloudflare-module` preset)
+- Cloudflare D1
+- xlsx (SheetJS) for rota parsing
+- qrcode for QR generation
+
+## Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Create a D1 database:
+   ```bash
+   npx wrangler d1 create attendance-qr-db
+   ```
+   Copy the `database_id` into `wrangler.jsonc`.
+
+3. Apply migrations:
+   ```bash
+   npx wrangler d1 migrations apply attendance-qr-db
+   ```
+
+4. Run locally:
+   ```bash
+   npm run build
+   npx wrangler dev --local
+   ```
+   Then open http://localhost:8787
+
+   Note: `npm run dev` may fail on Node 24 due to a `@cloudflare/vite-plugin` compatibility issue. Use `npx wrangler dev --local` instead.
+
+5. Deploy:
+   ```bash
+   npm run build
+   npx wrangler deploy
+   ```
+
+## Admin PIN
+
+Default: `Wh!ppscross`
+
+Set a different PIN via the `ADMIN_PIN` environment variable:
+```bash
+npx wrangler secret put ADMIN_PIN
+```
+
+## Rota Excel format
+
+The parser is flexible. It looks for a header row containing `Name` and `Shift`, detects tier/role section headers like `Tier A`, `Consultants`, `Nurses`, and extracts staff below each tier.
+
+Supported shift formats:
+- `0800-1800`
+- `08-1800`
+- `13:00-23:45`
+- `08:00-20:00`
+
+A sample file is included: `sample-rota.xlsx`
+
+## Routes
+
+- `/` — staff check-in/check-out
+- `/admin` — rota upload, QR code, ad-hoc staff, live dashboard, CSV export
+- `/qr` — printable QR code for the notice board
+- `/api/export.csv` — CSV export endpoint
