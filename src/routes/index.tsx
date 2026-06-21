@@ -65,9 +65,13 @@ function HomePage() {
   // Load status when staffId or token changes
   useEffect(() => {
     if (staffId) {
-      getStatus({ data: { rosterEntryId: staffId } }).then((s) =>
-        setStatus({ ...s, checkInAt: null }),
-      )
+      getStatus({ data: { rosterEntryId: staffId } })
+        .then((s) =>
+          setStatus({ ...s, checkInAt: null }),
+        )
+        .catch((e) => {
+          showMessage(e instanceof Error ? e.message : 'Failed to load status', 'error')
+        })
     } else {
       setStatus({ checkedIn: false, sessionId: null, checkInAt: null })
     }
@@ -313,6 +317,7 @@ function HomePage() {
               focus:border-warning-500 focus:ring-2 focus:ring-warning-200
               placeholder:text-neutral-400 text-sm"
             placeholder="Your name"
+            aria-label="Your name"
             value={manualName}
             onChange={(e) => setManualName(e.target.value)}
           />
@@ -321,6 +326,7 @@ function HomePage() {
               focus:border-warning-500 focus:ring-2 focus:ring-warning-200
               placeholder:text-neutral-400 text-sm"
             placeholder="Role (optional)"
+            aria-label="Role (optional)"
             value={manualRole}
             onChange={(e) => setManualRole(e.target.value)}
           />
@@ -363,6 +369,7 @@ function HomePage() {
             <button
               type="button"
               className="font-bold opacity-60 hover:opacity-100 shrink-0"
+              aria-label="Dismiss"
               onClick={() => setMessage(null)}
             >
               ×
@@ -375,6 +382,9 @@ function HomePage() {
       {showIdentityPicker && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="identity-picker-title"
           onClick={() => setShowIdentityPicker(false)}
         >
           {/* Backdrop */}
@@ -392,9 +402,10 @@ function HomePage() {
             </div>
 
             <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-900">Who are you?</h2>
+              <h2 id="identity-picker-title" className="text-lg font-semibold text-neutral-900">Who are you?</h2>
               <button
                 type="button"
+                aria-label="Close"
                 onClick={() => setShowIdentityPicker(false)}
                 className="p-1 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600"
               >
@@ -454,6 +465,9 @@ function HomePage() {
       {showPinEntry && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pin-modal-title"
           onClick={() => setShowPinEntry(false)}
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
@@ -463,7 +477,7 @@ function HomePage() {
           >
             <div className="flex items-center gap-2 mb-4">
               <Lock className="w-5 h-5 text-primary-600" />
-              <h2 className="text-lg font-semibold text-neutral-900">
+              <h2 id="pin-modal-title" className="text-lg font-semibold text-neutral-900">
                 {pinMode === 'lock' ? 'Lock identity' : 'Unlock identity'}
               </h2>
             </div>

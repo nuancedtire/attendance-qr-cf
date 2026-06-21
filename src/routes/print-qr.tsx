@@ -74,6 +74,7 @@ function PrintQrPage() {
           <input
             type="password"
             placeholder="Admin PIN"
+            aria-label="Admin PIN"
             className="w-full p-3 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
@@ -102,6 +103,7 @@ function PrintQrPage() {
               <CalendarDays className="w-4 h-4 text-neutral-400" />
               <input
                 type="date"
+                aria-label="Select date"
                 className="p-2 border border-neutral-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
