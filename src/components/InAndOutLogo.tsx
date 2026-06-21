@@ -1,106 +1,73 @@
-/**
- * InAndOutLogo
- *
- * The ampersand (&) forms the torso of a running figure.
- * A circular head + flat-brim cap sit above it.
- * Stroke arms and legs extend from the body.
- * Three speed lines appear to the left of the figure.
- * "IN" sits left, "OUT" sits right, in heavy black type.
- *
- * The same artwork lives as a standalone SVG at /public/logo.svg
- * for use outside React (emails, print, etc.).
- *
- * Props:
- *   height   — rendered height in px; width scales proportionally (default 80)
- *   dark     — invert to white fill for dark backgrounds (default false)
- *   className — forwarded to the <svg> element
- */
-
-const VW = 640
-const VH = 180
-
 interface InAndOutLogoProps {
+  /** Rendered height in px. Width scales automatically (aspect ratio 790:200). */
   height?: number
+  /** Use the light fill for dark backgrounds. */
   dark?: boolean
   className?: string
 }
 
+/**
+ * "IN & OUT" wordmark with the ampersand reimagined as a running figure.
+ *
+ * Letters are drawn as geometric strokes (no font dependency) so the mark
+ * renders identically everywhere. The geometry is identical to the standalone
+ * asset at /public/logo.svg — keep the two in sync.
+ */
 export function InAndOutLogo({ height = 80, dark = false, className }: InAndOutLogoProps) {
-  const ink = dark ? '#ffffff' : '#111827'
-  const font = "'Arial Black', 'Arial Bold', Arial, sans-serif"
+  const ink = dark ? '#f9fafb' : '#111827'
+  const width = Math.round((height * 790) / 200)
 
   return (
     <svg
-      viewBox={`0 0 ${VW} ${VH}`}
-      height={height}
-      width={Math.round((height * VW) / VH)}
-      aria-label="In &amp; Out"
-      role="img"
-      className={className}
       xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 790 200"
+      width={width}
+      height={height}
+      className={className}
+      role="img"
+      aria-label="IN and OUT"
     >
-      {/* ── "IN" ──────────────────────────────────────────────── */}
-      <text
-        x="4" y="152"
-        fontFamily={font}
-        fontWeight="900"
-        fontSize="140"
-        letterSpacing="-4"
-        fill={ink}
-      >
-        IN
-      </text>
+      {/* Wordmark: geometric letterforms drawn as strokes */}
+      <g fill="none" stroke={ink} strokeWidth={28} strokeLinecap="square" strokeLinejoin="miter">
+        {/* I */}
+        <path d="M34 64 V136" />
+        {/* N */}
+        <path d="M88 136 V64 L152 136 V64" />
+        {/* O */}
+        <ellipse cx="462" cy="100" rx="44" ry="36" />
+        {/* U */}
+        <path d="M560 64 V102 a34 34 0 0 0 68 0 V64" />
+        {/* T */}
+        <path d="M682 64 H750" />
+        <path d="M716 64 V136" />
+      </g>
 
-      {/* ── "OUT" ─────────────────────────────────────────────── */}
-      <text
-        x="348" y="152"
-        fontFamily={font}
-        fontWeight="900"
-        fontSize="140"
-        letterSpacing="-4"
-        fill={ink}
-      >
-        OUT
-      </text>
+      {/* Runner: chunky limbs with rounded joints */}
+      <g fill="none" stroke={ink} strokeWidth={24} strokeLinecap="round" strokeLinejoin="round">
+        {/* torso */}
+        <path d="M320 116 Q320 88 346 70" />
+        {/* neck */}
+        <path d="M346 70 L356 58" />
+        {/* front arm */}
+        <path d="M346 70 L376 84 L372 106" />
+        {/* back arm */}
+        <path d="M346 70 L318 82 L302 98" />
+        {/* front leg (lifted, bent knee) */}
+        <path d="M320 116 L354 138 L346 162" />
+        {/* back leg (extended) */}
+        <path d="M320 116 L292 140 L264 160" />
+      </g>
 
-      {/* ══════════════════════════════════════════════════════════
-          RUNNING FIGURE — "&" glyph forms the torso / body
-          ══════════════════════════════════════════════════════════ */}
+      {/* Speed lines */}
+      <g fill="none" stroke={ink} strokeWidth={11} strokeLinecap="round">
+        <path d="M216 74 H244" />
+        <path d="M204 98 H246" />
+        <path d="M216 122 H242" />
+      </g>
 
-      {/* Torso: bold ampersand */}
-      <text
-        x="196" y="152"
-        fontFamily={font}
-        fontWeight="900"
-        fontSize="140"
-        fill={ink}
-      >
-        &amp;
-      </text>
-
-      {/* Head */}
-      <circle cx="270" cy="20" r="16" fill={ink} />
-
-      {/* Cap crown */}
-      <rect x="253" y="4"  width="34" height="13" rx="4" fill={ink} />
-      {/* Cap brim */}
-      <rect x="248" y="15" width="44" height="7"  rx="2" fill={ink} />
-
-      {/* Right arm — drives forward to upper-right */}
-      <line x1="286" y1="74" x2="318" y2="54" stroke={ink} strokeWidth="12" strokeLinecap="round" />
-
-      {/* Back leg — kicks rearward */}
-      <line x1="232" y1="132" x2="205" y2="160" stroke={ink} strokeWidth="12" strokeLinecap="round" />
-
-      {/* Forward leg — stride ahead */}
-      <line x1="268" y1="132" x2="294" y2="162" stroke={ink} strokeWidth="12" strokeLinecap="round" />
-
-      {/* ══════════════════════════════════════════════════════════
-          SPEED LINES — three horizontal dashes to the left
-          ══════════════════════════════════════════════════════════ */}
-      <line x1="168" y1="82"  x2="192" y2="82"  stroke={ink} strokeWidth="8" strokeLinecap="round" />
-      <line x1="160" y1="98"  x2="192" y2="98"  stroke={ink} strokeWidth="8" strokeLinecap="round" />
-      <line x1="168" y1="114" x2="192" y2="114" stroke={ink} strokeWidth="8" strokeLinecap="round" />
+      {/* Head + cap */}
+      <circle cx="358" cy="46" r="17" fill={ink} />
+      <rect x="341" y="20" width="48" height="15" rx="6" fill={ink} transform="rotate(-16 365 27)" />
     </svg>
   )
 }

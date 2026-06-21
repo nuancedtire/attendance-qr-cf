@@ -1,81 +1,43 @@
-<svg
-  viewBox="0 0 640 180"
-  xmlns="http://www.w3.org/2000/svg"
-  aria-label="In &amp; Out"
-  role="img"
->
-  <!-- ── "IN" ──────────────────────────────────────────────── -->
-  <text
-    x="4" y="152"
-    font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
-    font-weight="900"
-    font-size="140"
-    letter-spacing="-4"
-    fill="#111827"
-  >IN</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 790 200" width="790" height="200" role="img" aria-label="IN & OUT">
+  <!-- Wordmark: geometric letterforms drawn as strokes (no font dependency) -->
+  <g fill="none" stroke="#111827" stroke-width="28" stroke-linecap="square" stroke-linejoin="miter">
+    <!-- I -->
+    <path d="M34 64 V136" />
+    <!-- N -->
+    <path d="M88 136 V64 L152 136 V64" />
+    <!-- O -->
+    <ellipse cx="462" cy="100" rx="44" ry="36" />
+    <!-- U -->
+    <path d="M560 64 V102 a34 34 0 0 0 68 0 V64" />
+    <!-- T -->
+    <path d="M682 64 H750" />
+    <path d="M716 64 V136" />
+  </g>
 
-  <!-- ── "OUT" ─────────────────────────────────────────────── -->
-  <text
-    x="348" y="152"
-    font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
-    font-weight="900"
-    font-size="140"
-    letter-spacing="-4"
-    fill="#111827"
-  >OUT</text>
+  <!-- Runner: chunky limbs with rounded joints -->
+  <g fill="none" stroke="#111827" stroke-width="24" stroke-linecap="round" stroke-linejoin="round">
+    <!-- torso (gentle curve, ampersand spirit) -->
+    <path d="M320 116 Q320 88 346 70" />
+    <!-- neck -->
+    <path d="M346 70 L356 58" />
+    <!-- front arm (reaching forward) -->
+    <path d="M346 70 L376 84 L372 106" />
+    <!-- back arm (swung back) -->
+    <path d="M346 70 L318 82 L302 98" />
+    <!-- front leg (lifted, bent knee) -->
+    <path d="M320 116 L354 138 L346 162" />
+    <!-- back leg (extended, pushing off) -->
+    <path d="M320 116 L292 140 L264 160" />
+  </g>
 
-  <!-- ══════════════════════════════════════════════════════════
-       RUNNING FIGURE — "&" glyph forms the torso/body
-       ══════════════════════════════════════════════════════════ -->
+  <!-- Speed lines -->
+  <g fill="none" stroke="#111827" stroke-width="11" stroke-linecap="round">
+    <path d="M216 74 H244" />
+    <path d="M204 98 H246" />
+    <path d="M216 122 H242" />
+  </g>
 
-  <!-- Torso: bold ampersand -->
-  <text
-    x="196" y="152"
-    font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
-    font-weight="900"
-    font-size="140"
-    fill="#111827"
-  >&amp;</text>
-
-  <!-- Head (circle) -->
-  <circle cx="270" cy="20" r="16" fill="#111827" />
-
-  <!-- Cap crown -->
-  <rect x="253" y="4"  width="34" height="13" rx="4" fill="#111827" />
-  <!-- Cap brim -->
-  <rect x="248" y="15" width="44" height="7"  rx="2" fill="#111827" />
-
-  <!-- Right arm — drives forward to upper-right -->
-  <line
-    x1="286" y1="74"
-    x2="318" y2="54"
-    stroke="#111827"
-    stroke-width="12"
-    stroke-linecap="round"
-  />
-
-  <!-- Back leg — kicks rearward -->
-  <line
-    x1="232" y1="132"
-    x2="205" y2="160"
-    stroke="#111827"
-    stroke-width="12"
-    stroke-linecap="round"
-  />
-
-  <!-- Forward leg — stride ahead -->
-  <line
-    x1="268" y1="132"
-    x2="294" y2="162"
-    stroke="#111827"
-    stroke-width="12"
-    stroke-linecap="round"
-  />
-
-  <!-- ══════════════════════════════════════════════════════════
-       SPEED LINES — three horizontal dashes to the left
-       ══════════════════════════════════════════════════════════ -->
-  <line x1="168" y1="82"  x2="192" y2="82"  stroke="#111827" stroke-width="8"  stroke-linecap="round" />
-  <line x1="160" y1="98"  x2="192" y2="98"  stroke="#111827" stroke-width="8"  stroke-linecap="round" />
-  <line x1="168" y1="114" x2="192" y2="114" stroke="#111827" stroke-width="8"  stroke-linecap="round" />
+  <!-- Head + cap -->
+  <circle cx="358" cy="46" r="17" fill="#111827" />
+  <rect x="341" y="20" width="48" height="15" rx="6" fill="#111827" transform="rotate(-16 365 27)" />
 </svg>
