@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { QrCode, Github } from 'lucide-react'
+import { Github } from 'lucide-react'
+import { InAndOutLogo } from '#/components/InAndOutLogo'
 
 export const Route = createFileRoute('/about')({
   component: About,
@@ -9,10 +10,10 @@ function About() {
   return (
     <main className="max-w-2xl mx-auto p-6 sm:p-8 space-y-8">
       <section>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-primary-100 text-primary-600">
-            <QrCode className="w-6 h-6" />
-          </div>
+        <div className="mb-6">
+          <InAndOutLogo height={64} />
+        </div>
+        <div className="mb-4">
           <h1 className="text-3xl font-bold text-neutral-900">Attendance QR</h1>
         </div>
         <p className="text-neutral-600 leading-relaxed">
