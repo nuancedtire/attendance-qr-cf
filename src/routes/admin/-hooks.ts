@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { adminVerifyPin } from '#/utils/sessions.functions'
 
-const AUTH_TOKEN_KEY = 'attendance-admin-token-v2'
+const AUTH_TOKEN_KEY = 'inout-admin-token-v2'
 
 export function usePersistentAdminAuth() {
   const [authToken, setAuthToken] = useState<string | null>(null)

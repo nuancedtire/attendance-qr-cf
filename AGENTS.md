@@ -8,14 +8,14 @@ Before substantial work:
 - Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
 <!-- intent-skills:end -->
 
-# Attendance QR — Project Context
+# InOut — Project Context
 
 ## Scaffolding
 
 Generated with TanStack CLI:
 
 ```bash
-npx @tanstack/cli@latest create attendance-qr-cf --agent --framework react --no-examples --deployment cloudflare --force
+npx @tanstack/cli@latest create inout --agent --framework react --no-examples --deployment cloudflare --force
 ```
 
 Then TanStack Intent was wired:
@@ -101,13 +101,13 @@ npx wrangler secret put QR_SEED
 
 1. Create the database:
    ```bash
-   npx wrangler d1 create attendance-qr-db
+   npx wrangler d1 create inout-db
    ```
 2. Copy the database ID into `wrangler.jsonc`.
 3. Run migrations:
    ```bash
-   npx wrangler d1 migrations apply attendance-qr-db --local
-   npx wrangler d1 migrations apply attendance-qr-db --remote
+   npx wrangler d1 migrations apply inout-db --local
+   npx wrangler d1 migrations apply inout-db --remote
    ```
 
 Schema is managed in `src/db/schema.ts` and mirrored in `migrations/0001_init.sql`.

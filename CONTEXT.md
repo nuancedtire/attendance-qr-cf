@@ -31,7 +31,7 @@
 
 **Rationale:** Pre-printing for weekends/holidays. Staff trust a stable QR. Token never changes mid-day.
 
-**Trade-off:** If `QR_SEED` leaks, all past/future tokens are compromisable. Mitigation: `QR_SEED` is server-side secret; damage limited to attendance fraud.
+**Trade-off:** If `QR_SEED` leaks, all past/future tokens are compromisable. Mitigation: `QR_SEED` is server-side secret; damage limited to check-in fraud.
 
 ### ADR-003: Rota-driven staff list with mandatory check-out
 
@@ -43,7 +43,7 @@
 
 ### ADR-005: Consolidated cron-powered feature expansion via omp + ponytail (SUPERSEDED by ADR-006)
 
-**Original Decision:** Single consolidated cron (`attendance-qr-consolidated`) runs every 3 hours. Each run: light audit pass (spot-check AUDIT.md vs codebase, prune/add items) + implement one backlog item.
+**Original Decision:** Single consolidated cron (`inout-qr-consolidated`) runs every 3 hours. Each run: light audit pass (spot-check AUDIT.md vs codebase, prune/add items) + implement one backlog item.
 
 **Status:** Superseded by ADR-006 on 2026-06-21. The cron now uses GitHub issues as the canonical backlog with a two-phase discovery+implementation model.
 

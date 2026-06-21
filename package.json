@@ -1,5 +1,5 @@
 {
-  "name": "attendance-qr-cf",
+  "name": "inout",
   "private": true,
   "type": "module",
   "imports": {

@@ -6,7 +6,7 @@ import { AlertCircle, CheckCircle2, Clock, Users, AlertTriangle } from 'lucide-r
 
 const LATE_THRESHOLD_MS = 15 * 60 * 1000
 
-export function AttendanceSummary({
+export function DailySummary({
   missingCheckIn,
   missingCheckOut,
   allGood,
@@ -37,7 +37,7 @@ export function AttendanceSummary({
     <Card>
       <div className="flex items-center gap-2 mb-4">
         <Users className="w-5 h-5 text-primary-600" />
-        <h2 className="font-semibold text-neutral-900">Attendance summary</h2>
+        <h2 className="font-semibold text-neutral-900">Daily summary</h2>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -91,7 +91,7 @@ export function AttendanceSummary({
             <Badge variant="success">{allGood.length}</Badge>
           </div>
           {allGood.length === 0 ? (
-            <p className="text-sm text-success-700">No completed attendances yet.</p>
+            <p className="text-sm text-success-700">No completed check-ins yet.</p>
           ) : (
             <p className="text-sm text-success-700">
               {allGood.length} staff member{allGood.length === 1 ? '' : 's'} have completed check-in and check-out.

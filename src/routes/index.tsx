@@ -206,7 +206,7 @@ function HomePage() {
       {/* Header */}
       <div className="flex items-center gap-2 pt-4">
         <Users className="w-6 h-6 text-primary-600" />
-        <h1 className="text-2xl font-bold text-neutral-900">Attendance</h1>
+        <h1 className="text-2xl font-bold text-neutral-900">In &amp; Out</h1>
       </div>
 
       {/* Identity bar */}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
-const STAFF_ID_KEY = 'attendance-staff-id'
-const STAFF_PIN_KEY = 'attendance-staff-pin'
+const STAFF_ID_KEY = 'inout-staff-id'
+const STAFF_PIN_KEY = 'inout-staff-pin'
 
 export function useStaffIdentity(
   entries: { id: number; name: string; role: string | null }[],

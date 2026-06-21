@@ -43,7 +43,7 @@ export const Route = createFileRoute('/api/export.csv')({
           return new Response(csv, {
             headers: {
               'Content-Type': 'text/csv',
-              'Content-Disposition': `attachment; filename="attendance-${startDate}.csv"`,
+              'Content-Disposition': `attachment; filename="inout-${startDate}.csv"`,
             },
           })
         } catch (e) {

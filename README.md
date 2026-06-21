@@ -27,13 +27,13 @@ QR-code based check-in/check-out for a department ward. Built with TanStack Star
 
 2. Create a D1 database:
    ```bash
-   npx wrangler d1 create attendance-qr-db
+   npx wrangler d1 create inout-db
    ```
    Copy the `database_id` into `wrangler.jsonc`.
 
 3. Apply migrations:
    ```bash
-   npx wrangler d1 migrations apply attendance-qr-db
+   npx wrangler d1 migrations apply inout-db
    ```
 
 4. Run locally:

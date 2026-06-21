@@ -97,7 +97,7 @@
 - **Item #13** — Audit log pruning: `adminPruneAuditLog` server function added. Deletes entries older than configurable `retentionDays` (default 90). Admin-only.
 - **Item #14** — CSV library: replaced naive `replace(/"/g, '""')` escaping with `papaparse` (`Papa.unparse`) in `src/routes/api/export[.]csv.ts`.
 - **Item #16** — Stale AGENTS.md: updated project structure, removed obsolete "Next steps" section.
-- **Item #17** — Self-upgrading cron: cron job `cd2592bf56f1` rewritten with two-phase prompt (discovery + implementation via GitHub issues/PRs). GitHub repo `nuancedtire/attendance-qr-cf` created with 6 control labels (`needs-triage`, `auto-fix`, `wont-fix`, `in-progress`, `ready-to-merge`, `question`). ADR-006 added to `docs/adr/`. CONTEXT.md updated with label taxonomy. `AUDIT.md` updated with corrected counters and all changes.
+- **Item #17** — Self-upgrading cron: cron job `cd2592bf56f1` rewritten with two-phase prompt (discovery + implementation via GitHub issues/PRs). GitHub repo `nuancedtire/inout` created with 6 control labels (`needs-triage`, `auto-fix`, `wont-fix`, `in-progress`, `ready-to-merge`, `question`). ADR-006 added to `docs/adr/`. CONTEXT.md updated with label taxonomy. `AUDIT.md` updated with corrected counters and all changes.
 - `.gitignore` updated with `.dev.vars` and `.cta.json`.
 - Build healthy.
 

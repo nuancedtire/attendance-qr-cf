@@ -136,7 +136,7 @@ function PrintQrPage() {
         ) : qrUrl ? (
           <div className="print-content max-w-lg mx-auto">
             <div className="text-center mb-4">
-              <p className="text-lg font-bold text-neutral-900">Staff Attendance</p>
+              <p className="text-lg font-bold text-neutral-900">Staff In &amp; Out</p>
               <p className="text-2xl font-bold text-neutral-900 mt-1">{date}</p>
               <p className="text-sm text-neutral-500 mt-1">Scan to check in / out</p>
             </div>

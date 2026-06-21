@@ -36,7 +36,7 @@ import { AuditLogSection } from '#/routes/admin/-components/AuditLogSection'
 import { WeeklyRollupSection } from '#/routes/admin/-components/WeeklyRollupSection'
 import type { AuditEventItem } from '#/routes/admin/-components/AuditEvent'
 import type { RosterEntryWithStatus, SessionRow } from '#/routes/admin/-types'
-import { AttendanceSummary } from '#/routes/admin/-components/AttendanceSummary'
+import { DailySummary } from '#/routes/admin/-components/DailySummary'
 import {
   CalendarDays,
   ChevronLeft,
@@ -314,7 +314,7 @@ const [confirmDialog, setConfirmDialog] = useState<{
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `attendance-${viewDate}.csv`
+      a.download = `inout-${viewDate}.csv`
       a.click()
       URL.revokeObjectURL(url)
     })
@@ -420,7 +420,7 @@ const [confirmDialog, setConfirmDialog] = useState<{
       <MessageBanner message={message} onClose={clear} />
       <RefreshError error={refreshError} onRetry={() => refresh().catch(() => {})} />
 
-      <AttendanceSummary
+      <DailySummary
         missingCheckIn={missingCheckIn}
         missingCheckOut={missingCheckOut}
         allGood={allGood}

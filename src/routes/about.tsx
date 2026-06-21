@@ -13,10 +13,10 @@ function About() {
           <div className="p-2 rounded-lg bg-primary-100 text-primary-600">
             <QrCode className="w-6 h-6" />
           </div>
-          <h1 className="text-3xl font-bold text-neutral-900">Attendance QR</h1>
+          <h1 className="text-3xl font-bold text-neutral-900">InOut</h1>
         </div>
         <p className="text-neutral-600 leading-relaxed">
-          A lightweight staff attendance system built for hospital wards.
+          A lightweight staff in/out system built for hospital wards.
           Staff scan a daily QR code on the notice board to check in and out.
           Admin uploads the daily rota, and the system tracks who is present,
           handles late arrivals, early departures, and generates weekly hour rollups.
@@ -55,13 +55,13 @@ function About() {
 
       <section className="pt-4 border-t border-neutral-200 space-y-3">
         <a
-          href="https://github.com/nuancedtire/attendance-qr-cf"
+          href="https://github.com/nuancedtire/inout"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 transition-colors"
         >
           <Github className="w-4 h-4" />
-          github.com/nuancedtire/attendance-qr-cf
+          github.com/nuancedtire/inout
         </a>
         <p className="text-sm text-neutral-400">
           Maintained by Nous Research.
