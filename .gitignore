@@ -13,3 +13,9 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+.hermes/
+.vscode/
+plan.html
+0
+sample-rota.csv
+sample-rota.xlsx

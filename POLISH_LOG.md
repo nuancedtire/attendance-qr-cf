@@ -89,3 +89,14 @@
 - Already completed by prior cron run. `SessionEditForm.tsx` exists with `checkInAt`, `checkOutAt`, `onChange`, `onSave`, `onCancel`, `className`, `inputClassName` props.
 - Used in both desktop table (`className="flex flex-wrap gap-2 items-center"`) and mobile cards (`className="space-y-2 mt-3" inputClassName="w-full"`) in `SessionSection.tsx`.
 - Build healthy, no duplicate markup remaining.
+
+## 2026-06-21 — Self-upgrading overhaul (#10, #13, #14, #15, #16, #17)
+
+- **Item #15 (CRITICAL)** — `requireAdmin` auth bypass: `requireAdmin()` in `src/utils/auth.ts:99` never threw on auth failure, silently returning undefined. Every admin endpoint was unauthenticated. Fixed by adding `throw new Error('Unauthorized: invalid or expired admin credentials')`.
+- **Item #10** — Rate limiting: in-memory 3-second window per entry+action key added to `checkIn`, `checkOut`, `undoLastAction` in `src/utils/sessions.functions.ts`.
+- **Item #13** — Audit log pruning: `adminPruneAuditLog` server function added. Deletes entries older than configurable `retentionDays` (default 90). Admin-only.
+- **Item #14** — CSV library: replaced naive `replace(/"/g, '""')` escaping with `papaparse` (`Papa.unparse`) in `src/routes/api/export[.]csv.ts`.
+- **Item #16** — Stale AGENTS.md: updated project structure, removed obsolete "Next steps" section.
+- **Item #17** — Self-upgrading cron: cron job `cd2592bf56f1` rewritten with two-phase prompt (discovery + implementation via GitHub issues/PRs). GitHub repo `nuancedtire/attendance-qr-cf` created with 6 control labels (`needs-triage`, `auto-fix`, `wont-fix`, `in-progress`, `ready-to-merge`, `question`). ADR-006 added to `docs/adr/`. CONTEXT.md updated with label taxonomy. `AUDIT.md` updated with corrected counters and all changes.
+- `.gitignore` updated with `.dev.vars` and `.cta.json`.
+- Build healthy.

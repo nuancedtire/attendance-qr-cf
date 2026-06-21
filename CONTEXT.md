@@ -11,6 +11,9 @@
 | **Session token** | A 12-hour stateless HMAC-signed token returned by `adminVerifyPin`. Used to authenticate all admin server functions. No DB storage — verified purely via signature. |
 | **Audit log** | Immutable record of every state-changing action: check-in, check-out, admin edit, rota upload, ad-hoc add. |
 | **Auto-checkout** | Closes any session whose roster entry's `shift_end + 60 minutes` has passed with no check-out. Admin-triggered, not automatic. |
+| **GitHub issue** | A discovered backlog item. Labeled `needs-triage` on creation by the cron. |
+| **auto-fix** | GitHub label set by human to authorize agent implementation. |
+| **Agent PR** | A pull request opened by the cron from branch `agent/issue-{N}-{slug}`. Never merged by the agent. |
 
 ## Architectural Decisions
 
@@ -38,9 +41,15 @@
 
 **Decision:** `/admin/print-qr` — standalone route, same admin auth gate as `/admin`. Has date picker. `@media print` hides chrome, maximizes QR. URL displayed below QR as text fallback.
 
-### ADR-005: Consolidated cron-powered feature expansion via omp + ponytail
+### ADR-005: Consolidated cron-powered feature expansion via omp + ponytail (SUPERSEDED by ADR-006)
 
-**Decision:** Single consolidated cron (`attendance-qr-consolidated`) runs every 3 hours. Each run: light audit pass (spot-check AUDIT.md vs codebase, prune/add items) + implement one backlog item. Fresh `omp -p` invocation with full project context (`AGENTS.md`, `AUDIT.md`, `POLISH_LOG.md`). Falls back to direct implementation if omp is unresponsive. One item per run, no scope creep. If backlog is empty after audit, `[SILENT]` — no delivery.
+**Original Decision:** Single consolidated cron (`attendance-qr-consolidated`) runs every 3 hours. Each run: light audit pass (spot-check AUDIT.md vs codebase, prune/add items) + implement one backlog item.
+
+**Status:** Superseded by ADR-006 on 2026-06-21. The cron now uses GitHub issues as the canonical backlog with a two-phase discovery+implementation model.
+
+### ADR-006: Self-upgrading maintenance via GitHub issues + cron
+
+See `docs/adr/0006-self-upgrading-cron.md`. The cron auto-discovers issues, files them as GitHub issues with labels, and implements `auto-fix` labeled items via PRs. The human controls the agent through labels and comments.
 
 ## Deployment
 

@@ -61,17 +61,17 @@
 **Done (2026-06-21).** Updated AGENTS.md with current project structure including all new routes, components, hooks, utils, and styles. Removed obsolete "Next steps" section.
 
 ### ~~17. Cron job failing / stale prompt~~ ✅ FIXED
-**What:** The cron prompt has been updated to the consolidated PART A+B workflow. The self-upgrading plan was never created but its goal (the consolidated prompt) is active.
+**Done (2026-06-21).** Cron job `cd2592bf56f1` rewritten with self-upgrading two-phase prompt (discovery + implementation via GitHub issues/PRs). GitHub repo `nuancedtire/attendance-qr-cf` created with 6 control labels. ADR-006 added to `docs/adr/`. CONTEXT.md updated with label taxonomy.
 
 ---
 
 ## For the cron agent
 
-The consolidated cron (`attendance-qr-consolidated`) handles both light audit and feature work in a single run. See the cron prompt for full instructions. Key rules:
+The consolidated cron (`attendance-qr-consolidated`, every 3h) is now a self-upgrading two-phase agent. See the cron prompt and `CONTEXT.md` → ADR-006 for full architecture. Key rules:
 
-1. **PART A — Audit:** Spot-check high-impact remaining items vs codebase. Prune stale ones. Add newly discovered issues.
-2. **PART B — Implement:** Pick ONE remaining item. Prefer `omp -p` (one attempt, then fall back to direct). Build, log, mark done.
-3. **If nothing to do:** Respond `[SILENT]`.
-4. **One item per run.** No scope creep.
+1. **PHASE A — Discovery:** Scan for doc-code drift, dead code, duplication, error handling, accessibility, security, performance, DX issues. File as GitHub issues with `needs-triage` label.
+2. **PHASE B — Implement:** Pick oldest `auto-fix` issue → create branch `agent/issue-{N}-{slug}` → implement → build check → open PR. Never push to main.
+3. **Labels as control surface:** `needs-triage` → human adds `auto-fix` → agent sets `in-progress` → PR opened → `ready-to-merge`. `wont-fix` = rejected. `question` = needs clarification.
+4. **If nothing to do:** `[SILENT]` — no delivery.
 5. If item needs DB change: update `src/db/schema.ts` AND `migrations/0001_init.sql`.
-6. Append to `POLISH_LOG.md` with date, item #, what changed, build status.
+6. Append to `POLISH_LOG.md` with date, issue #, what changed, build status.
