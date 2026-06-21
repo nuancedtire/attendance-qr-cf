@@ -41,6 +41,7 @@ function HistoryPage() {
 
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [pinInput, setPinInput] = useState('')
   const [pinMode, setPinMode] = useState<'lock' | 'unlock'>('unlock')
   const [pinError, setPinError] = useState('')
@@ -50,8 +51,13 @@ function HistoryPage() {
   useEffect(() => {
     if (staffId && token) {
       setLoading(true)
+      setLoadError(null)
       getStaffHistory({ data: { rosterEntryId: staffId, token } })
         .then((r) => setSessions(r.rows))
+        .catch((e) => {
+          setLoadError(e instanceof Error ? e.message : 'Failed to load history')
+          setSessions([])
+        })
         .finally(() => setLoading(false))
     }
   }, [staffId, token])
@@ -152,6 +158,11 @@ function HistoryPage() {
       {/* Session history */}
       {staffId && (
         <>
+          {loadError && (
+            <div className="p-3 rounded-lg text-sm bg-danger-100 text-danger-800 border border-danger-200">
+              {loadError}
+            </div>
+          )}
           {loading ? (
             <div className="text-center py-8 text-neutral-500 text-sm">Loading...</div>
           ) : sessions.length === 0 ? (
@@ -226,6 +237,9 @@ function HistoryPage() {
       {showIdentityPicker && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="identity-picker-title"
           onClick={() => setShowIdentityPicker(false)}
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
@@ -238,9 +252,10 @@ function HistoryPage() {
               <div className="w-10 h-1 rounded-full bg-neutral-300" />
             </div>
             <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-900">Who are you?</h2>
+              <h2 id="identity-picker-title" className="text-lg font-semibold text-neutral-900">Who are you?</h2>
               <button
                 type="button"
+                aria-label="Close"
                 onClick={() => setShowIdentityPicker(false)}
                 className="p-1 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600"
               >
@@ -292,6 +307,9 @@ function HistoryPage() {
       {showPinEntry && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pin-modal-title"
           onClick={() => setShowPinEntry(false)}
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
@@ -301,7 +319,7 @@ function HistoryPage() {
           >
             <div className="flex items-center gap-2 mb-4">
               <Lock className="w-5 h-5 text-primary-600" />
-              <h2 className="text-lg font-semibold text-neutral-900">
+              <h2 id="pin-modal-title" className="text-lg font-semibold text-neutral-900">
                 {pinMode === 'lock' ? 'Lock identity' : 'Unlock identity'}
               </h2>
             </div>

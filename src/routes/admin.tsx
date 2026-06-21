@@ -121,6 +121,7 @@ const [confirmDialog, setConfirmDialog] = useState<{
         <input
           type="password"
           placeholder="Admin PIN"
+          aria-label="Admin PIN"
           className="w-full p-3 border border-neutral-300 rounded-lg mb-3 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
           value={pin}
           onChange={(e) => setPin(e.target.value)}
@@ -358,6 +359,7 @@ const [confirmDialog, setConfirmDialog] = useState<{
             </Button>
             <input
               type="date"
+              aria-label="Select date"
               className="p-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
               value={viewDate}
               onChange={(e) => setViewDate(e.target.value)}

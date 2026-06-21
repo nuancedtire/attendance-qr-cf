@@ -31,7 +31,7 @@ export function ConfirmDialog({ state, onClose }: ConfirmDialogProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
       {/* overlay */}
       <div className="absolute inset-0 bg-black/50" onClick={() => !loading && onClose()} />
       {/* card */}
@@ -45,7 +45,7 @@ export function ConfirmDialog({ state, onClose }: ConfirmDialogProps) {
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-neutral-900">{state.title}</h3>
+            <h3 id="confirm-dialog-title" className="text-lg font-semibold text-neutral-900">{state.title}</h3>
             <p className="text-sm text-neutral-600 mt-1">{state.message}</p>
           </div>
         </div>

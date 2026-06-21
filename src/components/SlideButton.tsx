@@ -211,6 +211,81 @@ const SlideButton: FC<SlideButtonProps> = ({
     )
   })()
 
+  // ── Keyboard handler ───────────────────────────────────────────
+  const KEY_STEP = 20 // px per arrow key press
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (
+        disabled ||
+        loading ||
+        status === 'completed' ||
+        status === 'completing'
+      )
+        return
+
+      let newOffset = dragOffsetRef.current
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'ArrowUp':
+          e.preventDefault()
+          newOffset = Math.min(newOffset + KEY_STEP, maxDrag)
+          break
+        case 'ArrowLeft':
+        case 'ArrowDown':
+          e.preventDefault()
+          newOffset = Math.max(newOffset - KEY_STEP, 0)
+          break
+        case 'Home':
+          e.preventDefault()
+          newOffset = 0
+          break
+        case 'End':
+          e.preventDefault()
+          newOffset = maxDrag
+          break
+        default:
+          return
+      }
+
+      dragOffsetRef.current = newOffset
+      setDragOffset(newOffset)
+      setAnimating(false)
+
+      if (newOffset === maxDrag) {
+        // Auto-complete when keyboard navigates to end
+        setStatus('completing')
+        setAnimating(true)
+        setDragOffset(maxDrag)
+        dragOffsetRef.current = maxDrag
+
+        setTimeout(async () => {
+          setAnimating(false)
+          setStatus('loading')
+          try {
+            await onComplete()
+            setStatus('completed')
+          } catch {
+            setStatus('idle')
+            setAnimating(true)
+            setDragOffset(0)
+            dragOffsetRef.current = 0
+            setTimeout(() => setAnimating(false), SNAP_BACK_DURATION_MS)
+          }
+        }, COMPLETE_DURATION_MS)
+      } else {
+        setStatus('dragging')
+      }
+    },
+    [disabled, loading, status, maxDrag, onComplete],
+  )
+
+  const sliderLabel = `${label} — slide right or use arrow keys`
+  const valueText = maxDrag > 0
+    ? `${Math.round((dragOffset / maxDrag) * 100)}%`
+    : '0%'
+
   const isInteractive =
     !disabled && !loading && status !== 'completing'
 
@@ -225,10 +300,18 @@ const SlideButton: FC<SlideButtonProps> = ({
       {/* ── Track ───────────────────────────────────────────────── */}
       <div
         ref={trackRef}
+        role="slider"
+        tabIndex={isInteractive ? 0 : -1}
+        aria-label={sliderLabel}
+        aria-valuenow={dragOffset}
+        aria-valuemin={0}
+        aria-valuemax={maxDrag}
+        aria-valuetext={valueText}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onKeyDown={handleKeyDown}
         className={[
           'relative h-14 rounded-full overflow-hidden',
           'bg-neutral-200 border border-neutral-300',

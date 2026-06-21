@@ -75,10 +75,10 @@ export function RotaStaffSection({
           }}
           className="grid grid-cols-1 sm:grid-cols-2 gap-2"
         >
-          <input name="name" placeholder="Name" required className="p-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
-          <input name="role" placeholder="Role" className="p-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
-          <input name="shiftStart" placeholder="Shift start (HH:MM)" className="p-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
-          <input name="shiftEnd" placeholder="Shift end (HH:MM)" className="p-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+          <input name="name" placeholder="Name" required aria-label="Name" className="p-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+          <input name="role" placeholder="Role" aria-label="Role" className="p-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+          <input name="shiftStart" placeholder="Shift start (HH:MM)" aria-label="Shift start" className="p-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+          <input name="shiftEnd" placeholder="Shift end (HH:MM)" aria-label="Shift end" className="p-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
           <div className="sm:col-span-2">
             <Button type="submit" fullWidth loading={addLoading}>
               Add
