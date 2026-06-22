@@ -13,7 +13,9 @@
 | **Auto-checkout** | Closes any session whose roster entry's `shift_end + 60 minutes` has passed with no check-out. Admin-triggered, not automatic. |
 | **GitHub issue** | A discovered backlog item. Labeled `needs-triage` on creation by the cron. |
 | **auto-fix** | GitHub label set by human to authorize agent implementation. |
-| **Agent PR** | A pull request opened by the cron from branch `agent/issue-{N}-{slug}`. Never merged by the agent. |
+| **Agent PR** | A pull request opened by the cron from branch `agent/issue-group-{N}-{slug}` (groups) or `agent/issue-{N}-{slug}` (single). Never merged by the agent. |
+| **shadcn/ui** | UI component library (Radix primitives + Tailwind). Used for sidebar, calendar, popover, tooltip, dropdown, etc. |
+| **Drizzle ORM** | TypeScript-first SQLite ORM. Schema in `src/db/schema.ts`, migrations in `drizzle/migrations/`. |
 
 ## Architectural Decisions
 
@@ -54,5 +56,6 @@ See `docs/adr/0006-self-upgrading-cron.md`. The cron auto-discovers issues, file
 ## Deployment
 
 - **Platform:** Cloudflare Workers
-- **Database:** Cloudflare D1 (SQLite)
+- **Database:** Cloudflare D1 (SQLite) via Drizzle ORM
+- **Package manager:** pnpm
 - **Secrets:** `ADMIN_PIN`, `QR_SEED` via `wrangler secret put` / `.dev.vars`
