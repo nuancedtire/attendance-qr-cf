@@ -48,7 +48,7 @@ function About() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-neutral-900">Stack</h2>
         <p className="text-neutral-600">
-          Built with TanStack Start, React 19, TypeScript, Tailwind CSS v4.
+          Built with TanStack Start, React 19, TypeScript, Tailwind CSS v4, Drizzle ORM.
           Deployed on Cloudflare Workers with D1 (SQLite).
         </p>
       </section>
