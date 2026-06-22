@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useRouterState } from '@tanstack/react-router'
 import { SidebarProvider, SidebarTrigger } from '#/components/ui/sidebar'
 import { AppSidebar } from '#/routes/admin/-components/AppSidebar'
 import { AdminContext, type AdminContextValue } from '#/routes/admin/-context'
@@ -7,10 +7,18 @@ import { usePersistentAdminAuth, useAutoDismiss } from '#/routes/admin/-hooks'
 import { useLoading } from '#/hooks/useLoading'
 import { ErrorFallback } from '#/components/ErrorFallback'
 import { EmptyState } from '#/components/EmptyState'
+import { Lock, LogOut } from 'lucide-react'
 import { Button } from '#/components/Button'
-import { Badge } from '#/components/Badge'
-import { CalendarDays, ChevronLeft, ChevronRight, Lock, Inbox } from 'lucide-react'
-import { formatDate, addDays } from '#/utils/dateTime'
+import { Logo } from '#/components/Logo'
+import { DatePicker } from '#/components/DatePicker'
+import { addDays } from '#/utils/dateTime'
+
+const PAGE_TITLES: Record<string, string> = {
+  '/admin': 'Dashboard',
+  '/admin/roster': 'Roster',
+  '/admin/sessions': 'Sessions',
+  '/admin/audit': 'Audit',
+}
 
 export const Route = createFileRoute('/admin')({
   component: AdminLayout,
@@ -47,17 +55,20 @@ function AdminLayout() {
     }
 
     return (
-      <main className="min-h-screen flex items-center justify-center bg-neutral-50 p-4">
+      <main className="min-h-screen flex items-center justify-center bg-surface-soft p-4">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-600 text-white mb-4 shadow-md">
-              <Inbox className="w-7 h-7" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-50 mb-5">
+              <Logo size={52} variant="rausch" glow />
             </div>
-            <h1 className="text-2xl font-bold text-neutral-900">InOut Admin</h1>
-            <p className="text-sm text-neutral-500 mt-1">Enter your PIN to continue</p>
+            <h1 className="text-2xl font-bold text-ink">InOut Admin</h1>
+            <p className="text-sm text-muted mt-1">Enter your PIN to continue</p>
           </div>
-          <div className="bg-white rounded-2xl shadow-md border border-neutral-200 p-6">
-            <label className="block text-sm font-medium text-neutral-700 mb-2" htmlFor="pin-input">
+          <div
+            className="bg-canvas rounded-2xl p-6"
+            style={{ boxShadow: 'rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px 0, rgba(0,0,0,0.08) 0 4px 8px 0' }}
+          >
+            <label className="block text-sm font-medium text-body mb-2" htmlFor="pin-input">
               Admin PIN
             </label>
             <input
@@ -66,7 +77,7 @@ function AdminLayout() {
               inputMode="numeric"
               placeholder="••••"
               aria-label="Admin PIN"
-              className="w-full px-4 py-3 text-lg tracking-widest border border-neutral-300 rounded-xl mb-4 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-center"
+              className="w-full px-4 py-3 text-lg tracking-widest border border-hairline rounded-xl mb-4 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-center transition-all"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
               onKeyDown={async (e) => {
@@ -77,7 +88,7 @@ function AdminLayout() {
               Unlock
             </Button>
             {message && (
-              <div className="mt-3 flex items-center gap-2 p-3 bg-danger-50 rounded-lg border border-danger-100">
+              <div className="mt-3 flex items-center gap-2 p-3 bg-danger-50 rounded-xl border border-danger-100">
                 <Lock className="w-4 h-4 text-danger-600 shrink-0" />
                 <p className="text-sm text-danger-700">{message}</p>
               </div>
@@ -103,57 +114,87 @@ function AdminLayout() {
     <AdminContext.Provider value={contextValue}>
       <SidebarProvider>
         <AppSidebar />
-        <main className="w-full min-h-svh bg-neutral-50">
-          {/* Top bar: sidebar trigger, date picker, logout */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b bg-white sticky top-0 z-20">
-            <SidebarTrigger />
-            <div className="flex items-center gap-2">
-              <CalendarDays className="w-5 h-5 text-primary-600 shrink-0" />
-              <button
-                aria-label="Previous day"
-                className="p-1 rounded hover:bg-neutral-100 text-neutral-500"
-                onClick={() => setViewDate(addDays(viewDate, -1))}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <input
-                type="date"
-                aria-label="Select date"
-                className="p-2 border border-neutral-300 rounded-lg text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                value={viewDate}
-                onChange={(e) => setViewDate(e.target.value)}
-              />
-              <button
-                aria-label="Next day"
-                className="p-1 rounded hover:bg-neutral-100 text-neutral-500"
-                onClick={() => setViewDate(addDays(viewDate, 1))}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-              {!isToday && (
-                <Button variant="ghost" size="sm" onClick={() => setViewDate(today)}>
-                  Today
-                </Button>
-              )}
-            </div>
-            <Badge variant={isToday ? 'success' : 'neutral'}>
-              {isToday ? 'Today' : formatDate(viewDate)}
-            </Badge>
-            <div className="flex-1" />
-            <button
-              className="text-sm text-neutral-600 hover:text-neutral-900 underline flex items-center gap-1 shrink-0"
-              onClick={logout}
-            >
-              <Lock className="w-3.5 h-3.5" />
-              Lock
-            </button>
-          </div>
-          {/* Page content */}
-          <div className="p-4 sm:p-6">
+        <main className="w-full min-h-svh bg-surface-soft flex flex-col">
+          <TopBar
+            viewDate={viewDate}
+            isToday={isToday}
+            today={today}
+            onPrev={() => setViewDate(addDays(viewDate, -1))}
+            onNext={() => setViewDate(addDays(viewDate, 1))}
+            onDateChange={(d) => setViewDate(d)}
+            onToday={() => setViewDate(today)}
+            onLogout={logout}
+          />
+          <div className="flex-1 p-4 sm:p-6">
             <Outlet />
           </div>
         </main>
       </SidebarProvider>
     </AdminContext.Provider>
+  )
+}
+
+type TopBarProps = {
+  viewDate: string
+  isToday: boolean
+  today: string
+  onPrev: () => void
+  onNext: () => void
+  onDateChange: (d: string) => void
+  onToday: () => void
+  onLogout: () => void
+}
+
+function TopBar({ viewDate, isToday, onPrev, onNext, onDateChange, onToday, onLogout }: TopBarProps) {
+  const router = useRouterState()
+  const pageTitle = PAGE_TITLES[router.location.pathname] ?? 'Admin'
+
+  return (
+    <header className="flex items-center gap-3 px-5 h-16 border-b border-hairline bg-canvas sticky top-0 z-20 shrink-0">
+      <SidebarTrigger className="text-muted hover:text-ink" />
+      <div className="w-px h-5 bg-hairline" />
+      <h1 className="text-sm font-semibold text-ink">{pageTitle}</h1>
+
+      <div className="flex-1" />
+
+      {/* Date navigation */}
+      <div className="flex items-center gap-1">
+        <button
+          aria-label="Previous day"
+          className="p-1.5 rounded-full hover:bg-surface-soft text-muted hover:text-ink transition-all"
+          onClick={onPrev}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+        <DatePicker value={viewDate} onChange={onDateChange} />
+        <button
+          aria-label="Next day"
+          className="p-1.5 rounded-full hover:bg-surface-soft text-muted hover:text-ink transition-all"
+          onClick={onNext}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      </div>
+
+      {!isToday && (
+        <button
+          onClick={onToday}
+          className="px-3 py-1.5 text-xs font-semibold rounded-full border border-hairline bg-canvas text-ink hover:bg-surface-soft transition-colors"
+        >
+          Today
+        </button>
+      )}
+
+      <div className="w-px h-5 bg-hairline" />
+
+      <button
+        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted hover:text-ink hover:bg-surface-soft rounded-full transition-colors"
+        onClick={onLogout}
+        title="Lock admin"
+      >
+        <LogOut className="w-3.5 h-3.5" />
+        <span className="hidden sm:inline">Lock</span>
+      </button>
+    </header>
   )
 }

@@ -4,14 +4,15 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  useSidebar,
 } from '#/components/ui/sidebar'
-import { LayoutDashboard, ClipboardList, Users, ScrollText, Inbox } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, Users, ScrollText } from 'lucide-react'
+import { Logo } from '#/components/Logo'
 
 const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
@@ -23,47 +24,54 @@ const navItems = [
 export function AppSidebar() {
   const router = useRouterState()
   const currentPath = router.location.pathname
+  const { setOpen } = useSidebar()
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-3">
-          <Inbox className="w-6 h-6 text-primary-600 shrink-0" />
-          <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden whitespace-nowrap">
-            InOut Admin
-          </span>
+        {/* In(Logo)Out lockup */}
+        {/* Collapsed: logo centered, clicking it expands the sidebar */}
+        <button
+          className="group-data-[collapsible=icon]:flex hidden w-full items-center justify-center py-5 cursor-pointer"
+          onClick={() => setOpen(true)}
+          aria-label="Expand sidebar"
+        >
+          <Logo size={48} variant="rausch" />
+        </button>
+        {/* Expanded: In + Logo + Out */}
+        <div className="group-data-[collapsible=icon]:hidden flex items-center gap-0 px-5 py-5">
+          <span className="text-3xl font-bold text-ink tracking-tight leading-none">In</span>
+          <Logo size={56} variant="rausch" className="-mx-1.5" />
+          <span className="text-3xl font-bold text-ink tracking-tight leading-none">Out</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={
-                      item.to === '/admin'
-                        ? currentPath === '/admin'
-                        : currentPath.startsWith(item.to)
-                    }
-                    tooltip={item.label}
-                  >
-                    <Link to={item.to}>
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {navItems.map((item) => {
+                const active =
+                  item.to === '/admin'
+                    ? currentPath === '/admin'
+                    : currentPath.startsWith(item.to)
+                return (
+                  <SidebarMenuItem key={item.to}>
+                    <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+                      <Link to={item.to}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="px-2 py-2 text-xs text-neutral-400 group-data-[collapsible=icon]:hidden">
-          InOut v1.0
+        <div className="px-3 py-3 group-data-[collapsible=icon]:hidden">
+          <p className="text-xs text-muted">v1.0</p>
         </div>
       </SidebarFooter>
     </Sidebar>

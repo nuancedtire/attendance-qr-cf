@@ -1,10 +1,50 @@
-import { Badge } from '#/components/Badge'
 import type { RosterEntryWithStatus } from '#/routes/admin/-types'
-import { Card } from '#/components/Card'
 import { formatTime, parseShiftTime } from '#/utils/dateTime'
-import { AlertCircle, CheckCircle2, Clock, Users, AlertTriangle } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Clock, UserX, Timer } from 'lucide-react'
 
 const LATE_THRESHOLD_MS = 15 * 60 * 1000
+
+type StatusCellProps = {
+  icon: React.ElementType
+  title: string
+  count: number
+  emptyMsg: string
+  items: { id: number; name: string; role?: string | null; detail?: string }[]
+  accentColor: string
+  bgColor: string
+}
+
+function StatusCell({ icon: Icon, title, count, emptyMsg, items, accentColor, bgColor }: StatusCellProps) {
+  return (
+    <div className="p-4 rounded-2xl flex flex-col gap-3" style={{ background: bgColor }}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Icon className="w-4 h-4" style={{ color: accentColor }} />
+          <span className="text-sm font-semibold" style={{ color: accentColor }}>{title}</span>
+        </div>
+        <span
+          className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
+          style={{ background: accentColor }}
+        >
+          {count}
+        </span>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-xs text-muted">{emptyMsg}</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {items.map((p) => (
+            <li key={p.id} className="text-xs">
+              <span className="font-medium text-ink">{p.name}</span>
+              {p.role && <span className="text-muted"> · {p.role}</span>}
+              {p.detail && <span className="text-muted block">{p.detail}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 export function DailySummary({
   missingCheckIn,
@@ -34,115 +74,80 @@ export function DailySummary({
   })
 
   return (
-    <Card>
+    <div
+      className="bg-canvas rounded-2xl p-5"
+      style={{ boxShadow: 'rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px 0, rgba(0,0,0,0.08) 0 4px 8px 0' }}
+    >
       <div className="flex items-center gap-2 mb-4">
-        <Users className="w-5 h-5 text-primary-600" />
-        <h2 className="font-semibold text-neutral-900">Daily summary</h2>
+        <h2 className="font-semibold text-ink">Daily summary</h2>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="p-3 rounded-lg bg-danger-50 border border-danger-100">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="w-4 h-4 text-danger-600" />
-            <span className="text-sm font-medium text-danger-900">Missing check-in</span>
-            <Badge variant="danger">{missingCheckIn.length}</Badge>
-          </div>
-          {missingCheckIn.length === 0 ? (
-            <p className="text-sm text-danger-700">Everyone has checked in.</p>
-          ) : (
-            <ul className="space-y-1">
-              {missingCheckIn.map((p) => (
-                <li key={p.id} className="text-sm text-danger-800">
-                  {p.name} {p.role ? `(${p.role})` : ''}
-                  {p.shift_start ? <span className="text-danger-600 ml-1">— shift {p.shift_start}</span> : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="p-3 rounded-lg bg-warning-50 border border-warning-100">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-4 h-4 text-warning-600" />
-            <span className="text-sm font-medium text-warning-900">Missing check-out</span>
-            <Badge variant="warning">{missingCheckOut.length}</Badge>
-          </div>
-          {missingCheckOut.length === 0 ? (
-            <p className="text-sm text-warning-700">No one is overdue.</p>
-          ) : (
-            <ul className="space-y-1">
-              {missingCheckOut.map((p) => (
-                <li key={p.id} className="text-sm text-warning-800">
-                  {p.name} {p.role ? `(${p.role})` : ''}
-                  {p.checkInAt ? (
-                    <span className="text-warning-600 ml-1">— in at {formatTime(p.checkInAt)}
-                    </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="p-3 rounded-lg bg-success-50 border border-success-100">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 className="w-4 h-4 text-success-600" />
-            <span className="text-sm font-medium text-success-900">All good</span>
-            <Badge variant="success">{allGood.length}</Badge>
-          </div>
-          {allGood.length === 0 ? (
-            <p className="text-sm text-success-700">No completed check-ins yet.</p>
-          ) : (
-            <p className="text-sm text-success-700">
-              {allGood.length} staff member{allGood.length === 1 ? '' : 's'} have completed check-in and check-out.
-            </p>
-          )}
-        </div>
-
-        <div className="p-3 rounded-lg bg-primary-50 border border-primary-100">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-4 h-4 text-primary-600" />
-            <span className="text-sm font-medium text-primary-900">Late arrivals</span>
-            <Badge variant="info">{lateArrivals.length}</Badge>
-          </div>
-          {lateArrivals.length === 0 ? (
-            <p className="text-sm text-primary-700">Everyone was on time.</p>
-          ) : (
-            <ul className="space-y-1">
-              {lateArrivals.map((p) => (
-                <li key={p.id} className="text-sm text-primary-800">
-                  {p.name} {p.role ? `(${p.role})` : ''}
-                  {p.checkInAt ? (
-                    <span className="text-primary-600 ml-1">— in at {formatTime(p.checkInAt)}</span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="p-3 rounded-lg bg-neutral-100 border border-neutral-200">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-4 h-4 text-neutral-500" />
-            <span className="text-sm font-medium text-neutral-700">Early departures</span>
-            <Badge variant="neutral">{earlyDepartures.length}</Badge>
-          </div>
-          {earlyDepartures.length === 0 ? (
-            <p className="text-sm text-neutral-600">No one left early.</p>
-          ) : (
-            <ul className="space-y-1">
-              {earlyDepartures.map((p) => (
-                <li key={p.id} className="text-sm text-neutral-700">
-                  {p.name} {p.role ? `(${p.role})` : ''}
-                  {p.checkOutAt ? (
-                    <span className="text-neutral-500 ml-1">— out at {formatTime(p.checkOutAt)}</span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <StatusCell
+          icon={AlertCircle}
+          title="Missing check-in"
+          count={missingCheckIn.length}
+          emptyMsg="Everyone has checked in."
+          items={missingCheckIn.map((p) => ({
+            id: p.id,
+            name: p.name,
+            role: p.role,
+            detail: p.shift_start ? `shift ${p.shift_start}` : undefined,
+          }))}
+          accentColor="#dc2626"
+          bgColor="#fef2f2"
+        />
+        <StatusCell
+          icon={Clock}
+          title="Missing check-out"
+          count={missingCheckOut.length}
+          emptyMsg="No one is overdue."
+          items={missingCheckOut.map((p) => ({
+            id: p.id,
+            name: p.name,
+            role: p.role,
+            detail: p.checkInAt ? `in at ${formatTime(p.checkInAt)}` : undefined,
+          }))}
+          accentColor="#d97706"
+          bgColor="#fffbeb"
+        />
+        <StatusCell
+          icon={CheckCircle2}
+          title="All good"
+          count={allGood.length}
+          emptyMsg="No completed sessions yet."
+          items={allGood.slice(0, 3).map((p) => ({ id: p.id, name: p.name, role: p.role }))}
+          accentColor="#16a34a"
+          bgColor="#f0fdf4"
+        />
+        <StatusCell
+          icon={Timer}
+          title="Late arrivals"
+          count={lateArrivals.length}
+          emptyMsg="Everyone was on time."
+          items={lateArrivals.map((p) => ({
+            id: p.id,
+            name: p.name,
+            role: p.role,
+            detail: p.checkInAt ? `in at ${formatTime(p.checkInAt)}` : undefined,
+          }))}
+          accentColor="#2563eb"
+          bgColor="#eff6ff"
+        />
+        <StatusCell
+          icon={UserX}
+          title="Early departures"
+          count={earlyDepartures.length}
+          emptyMsg="No one left early."
+          items={earlyDepartures.map((p) => ({
+            id: p.id,
+            name: p.name,
+            role: p.role,
+            detail: p.checkOutAt ? `out at ${formatTime(p.checkOutAt)}` : undefined,
+          }))}
+          accentColor="#6a6a6a"
+          bgColor="#f7f7f7"
+        />
       </div>
-    </Card>
+    </div>
   )
 }

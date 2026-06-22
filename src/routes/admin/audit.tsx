@@ -38,7 +38,7 @@ function AdminAudit() {
 
   if (loading) {
     return (
-      <div className="animate-pulse max-w-5xl">
+      <div className="animate-pulse">
         <div className="h-96 bg-neutral-200 rounded-xl" />
       </div>
     )
@@ -46,7 +46,7 @@ function AdminAudit() {
 
   if (error) {
     return (
-      <div className="p-4 bg-danger-50 text-danger-800 rounded-lg border border-danger-200 max-w-5xl">
+      <div className="p-4 bg-danger-50 text-danger-800 rounded-lg border border-danger-200">
         <p className="font-medium">Failed to load audit log</p>
         <p className="text-sm">{error}</p>
       </div>
@@ -54,7 +54,7 @@ function AdminAudit() {
   }
 
   return (
-    <div className="max-w-5xl">
+    <div>
       <AuditLogSection audit={audit} />
     </div>
   )

@@ -16,18 +16,18 @@ type ButtonProps = {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500',
-  secondary: 'bg-neutral-800 text-white hover:bg-neutral-900 focus:ring-neutral-500',
-  success: 'bg-success-600 text-white hover:bg-success-700 focus:ring-success-500',
-  warning: 'bg-warning-600 text-white hover:bg-warning-700 focus:ring-warning-500',
-  danger: 'bg-danger-600 text-white hover:bg-danger-700 focus:ring-danger-500',
-  ghost: 'bg-transparent text-primary-700 hover:bg-primary-50 focus:ring-primary-500',
+  primary: 'bg-primary-500 text-white hover:bg-primary-600 active:scale-[0.98]',
+  secondary: 'bg-white text-ink border border-hairline hover:bg-surface-soft active:scale-[0.98]',
+  success: 'bg-success-600 text-white hover:bg-success-700 active:scale-[0.98]',
+  warning: 'bg-warning-600 text-white hover:bg-warning-700 active:scale-[0.98]',
+  danger: 'bg-danger-600 text-white hover:bg-danger-700 active:scale-[0.98]',
+  ghost: 'bg-transparent text-primary-500 hover:bg-primary-50 active:scale-[0.98]',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
   sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-base',
-  lg: 'px-6 py-3 text-lg',
+  md: 'px-5 py-2.5 text-sm font-medium',
+  lg: 'px-6 py-3 text-base',
 }
 
 export function Button({
@@ -47,9 +47,9 @@ export function Button({
       onClick={onClick}
       disabled={disabled || loading}
       className={[
-        'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
-        'focus:outline-none focus:ring-2 focus:ring-offset-1',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
+        'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1',
+        'disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100',
         variantClasses[variant],
         sizeClasses[size],
         fullWidth ? 'w-full' : '',

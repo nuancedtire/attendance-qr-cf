@@ -4,10 +4,9 @@ import { useAdminContext } from '#/routes/admin/-context'
 import { adminGetDashboard } from '#/utils/sessions.functions'
 import { DailySummary } from '#/routes/admin/-components/DailySummary'
 import { WhoIsInSection, type PresentStaff } from '#/routes/admin/-components/WhoIsInSection'
-import { Card } from '#/components/Card'
 import type { RosterEntryWithStatus, SessionRow } from '#/routes/admin/-types'
 import type { AuditEventItem } from '#/routes/admin/-components/AuditEvent'
-import { Users, UserCheck, Clock } from 'lucide-react'
+import { CalendarDays, LogIn, Building2 } from 'lucide-react'
 import { parseShiftTime } from '#/utils/dateTime'
 
 type DashboardData = {
@@ -20,6 +19,49 @@ type DashboardData = {
 export const Route = createFileRoute('/admin/')({
   component: AdminDashboard,
 })
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  accent,
+  progress,
+}: {
+  icon: React.ElementType
+  label: string
+  value: number
+  sub: string
+  accent: string
+  progress?: number
+}) {
+  return (
+    <div
+      className="bg-canvas rounded-2xl overflow-hidden flex items-stretch"
+      style={{ boxShadow: 'rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px 0, rgba(0,0,0,0.08) 0 4px 8px 0' }}
+    >
+      <div className="flex-1 px-6 py-5 min-w-0">
+        <p className="text-xs font-semibold text-muted uppercase tracking-wider">{label}</p>
+        <p className="text-3xl font-bold text-ink leading-none mt-1">{value}</p>
+        <p className="text-xs text-muted mt-1">{sub}</p>
+        {progress !== undefined && (
+          <div className="h-1 bg-surface-strong rounded-full overflow-hidden mt-3">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${progress}%`, background: accent }}
+            />
+          </div>
+        )}
+      </div>
+      <div
+        className="w-20 flex items-center justify-center shrink-0"
+        style={{ background: accent + '18' }}
+      >
+        <Icon className="w-8 h-8" style={{ color: accent }} />
+      </div>
+    </div>
+  )
+}
 
 function AdminDashboard() {
   const { authToken, viewDate, today } = useAdminContext()
@@ -46,9 +88,7 @@ function AdminDashboard() {
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [viewDate, authToken])
 
   if (loading) {
@@ -56,110 +96,72 @@ function AdminDashboard() {
       <div className="space-y-6 animate-pulse">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-neutral-200 rounded-xl" />
+            <div key={i} className="h-36 bg-canvas rounded-2xl" />
           ))}
         </div>
-        <div className="h-48 bg-neutral-200 rounded-xl" />
-        <div className="h-48 bg-neutral-200 rounded-xl" />
+        <div className="h-48 bg-canvas rounded-2xl" />
+        <div className="h-48 bg-canvas rounded-2xl" />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-danger-50 text-danger-800 rounded-lg border border-danger-200">
-        <p className="font-medium">Failed to load dashboard data</p>
-        <p className="text-sm">{error}</p>
+      <div className="p-5 bg-danger-50 text-danger-800 rounded-2xl border border-danger-100">
+        <p className="font-semibold">Failed to load dashboard</p>
+        <p className="text-sm mt-1">{error}</p>
       </div>
     )
   }
 
   const checkedInCount = entries.filter((e) => e.checkInAt).length
   const stillInCount = present.length
+  const checkedInPct = entries.length > 0 ? Math.round((checkedInCount / entries.length) * 100) : 0
+  const stillInPct = entries.length > 0 ? Math.round((stillInCount / entries.length) * 100) : 0
 
   const now = new Date()
   const isToday = viewDate === today
 
   const missingCheckIn = isToday
     ? entries.filter(
-        (e) =>
-          !e.checkInAt &&
-          (!e.shift_start ||
-            (parseShiftTime(viewDate, e.shift_start)?.getTime() ?? 0) < now.getTime()),
+        (e) => !e.checkInAt && (!e.shift_start || (parseShiftTime(viewDate, e.shift_start)?.getTime() ?? 0) < now.getTime()),
       )
     : []
 
   const missingCheckOut = isToday
     ? entries.filter(
-        (e) =>
-          e.checkInAt &&
-          !e.checkOutAt &&
-          e.shift_end &&
-          (parseShiftTime(viewDate, e.shift_end)?.getTime() ?? Infinity) < now.getTime(),
+        (e) => e.checkInAt && !e.checkOutAt && e.shift_end && (parseShiftTime(viewDate, e.shift_end)?.getTime() ?? Infinity) < now.getTime(),
       )
     : []
 
   const allGood = entries.filter((e) => e.checkInAt && e.checkOutAt)
 
-  const checkedInPct = entries.length > 0 ? Math.round((checkedInCount / entries.length) * 100) : 0
-  const stillInPct = entries.length > 0 ? Math.round((stillInCount / entries.length) * 100) : 0
-
   return (
-    <div className="space-y-6 max-w-5xl">
-      {/* Stat cards */}
+    <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <div className="flex items-start justify-between mb-3">
-            <div className="p-2 rounded-lg bg-primary-100 text-primary-600">
-              <Users className="w-5 h-5" />
-            </div>
-            <span className="text-xs text-neutral-400 font-medium uppercase tracking-wide">On rota</span>
-          </div>
-          <p className="text-3xl font-bold text-neutral-900">{entries.length}</p>
-          <p className="text-sm text-neutral-500 mt-0.5">staff scheduled today</p>
-        </Card>
-        <Card>
-          <div className="flex items-start justify-between mb-3">
-            <div className="p-2 rounded-lg bg-success-100 text-success-600">
-              <UserCheck className="w-5 h-5" />
-            </div>
-            <span className="text-xs text-neutral-400 font-medium uppercase tracking-wide">Checked in</span>
-          </div>
-          <p className="text-3xl font-bold text-neutral-900">{checkedInCount}</p>
-          <div className="mt-2">
-            <div className="flex justify-between text-xs text-neutral-500 mb-1">
-              <span>{checkedInPct}% of rota</span>
-              <span>{entries.length - checkedInCount} remaining</span>
-            </div>
-            <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-success-500 rounded-full transition-all duration-500"
-                style={{ width: `${checkedInPct}%` }}
-              />
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-start justify-between mb-3">
-            <div className="p-2 rounded-lg bg-warning-100 text-warning-600">
-              <Clock className="w-5 h-5" />
-            </div>
-            <span className="text-xs text-neutral-400 font-medium uppercase tracking-wide">Currently in</span>
-          </div>
-          <p className="text-3xl font-bold text-neutral-900">{stillInCount}</p>
-          <div className="mt-2">
-            <div className="flex justify-between text-xs text-neutral-500 mb-1">
-              <span>{stillInPct}% of rota</span>
-              <span>{checkedInCount - stillInCount} checked out</span>
-            </div>
-            <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-warning-500 rounded-full transition-all duration-500"
-                style={{ width: `${stillInPct}%` }}
-              />
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          icon={CalendarDays}
+          label="On rota"
+          value={entries.length}
+          sub="staff scheduled today"
+          accent="#6a6a6a"
+        />
+        <StatCard
+          icon={LogIn}
+          label="Checked in"
+          value={checkedInCount}
+          sub={`${entries.length - checkedInCount} yet to arrive`}
+          accent="#16a34a"
+          progress={checkedInPct}
+        />
+        <StatCard
+          icon={Building2}
+          label="Currently in"
+          value={stillInCount}
+          sub={`${checkedInCount - stillInCount} have checked out`}
+          accent="#ff385c"
+          progress={stillInPct}
+        />
       </div>
 
       <DailySummary

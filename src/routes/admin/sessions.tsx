@@ -91,14 +91,14 @@ function AdminSessions() {
 
   if (dataLoading) {
     return (
-      <div className="animate-pulse max-w-5xl">
+      <div className="animate-pulse">
         <div className="h-64 bg-neutral-200 rounded-xl" />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6">
       <MessageBanner message={message} onClose={clear} />
       {error && (
         <div className="p-4 bg-danger-50 text-danger-800 rounded-lg border border-danger-200">

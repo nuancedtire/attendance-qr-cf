@@ -7,14 +7,17 @@ type CardProps = {
 
 export function Card({ children, className = '', title, action }: CardProps) {
   return (
-    <section className={`bg-white rounded-xl shadow-md border border-neutral-200 ${className}`}>
+    <section
+      className={`bg-white rounded-2xl border border-hairline ${className}`}
+      style={{ boxShadow: 'rgba(0,0,0,0.02) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 6px 0, rgba(0,0,0,0.08) 0 4px 8px 0' }}
+    >
       {(title || action) && (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
-          {title ? <h2 className="font-semibold text-neutral-900">{title}</h2> : <div />}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-hairline-soft">
+          {title ? <h2 className="font-semibold text-ink">{title}</h2> : <div />}
           {action ? <div>{action}</div> : null}
         </div>
       )}
-      <div className="p-4">{children}</div>
+      <div className="p-5">{children}</div>
     </section>
   )
 }

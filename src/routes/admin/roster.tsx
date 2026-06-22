@@ -221,7 +221,7 @@ function AdminRoster() {
 
   if (dataLoading) {
     return (
-      <div className="space-y-6 animate-pulse max-w-5xl">
+      <div className="space-y-6 animate-pulse">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="h-64 bg-neutral-200 rounded-xl" />
           <div className="h-64 bg-neutral-200 rounded-xl" />
@@ -233,7 +233,7 @@ function AdminRoster() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6">
       <MessageBanner message={message} onClose={clear} />
       {error && (
         <div className="p-4 bg-danger-50 text-danger-800 rounded-lg border border-danger-200">
