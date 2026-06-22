@@ -110,7 +110,7 @@ npx wrangler secret put QR_SEED
    npx wrangler d1 migrations apply inout-db --remote
    ```
 
-Schema is managed in `src/db/schema.ts` and mirrored in `migrations/0001_init.sql`.
+Schema is managed in `src/db/schema.ts` and mirrored in `drizzle/migrations/0000_mature_quicksilver.sql` (Drizzle Kit migrations).
 
 ## Local dev
 
