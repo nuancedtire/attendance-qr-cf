@@ -16,12 +16,14 @@ todos.json
 .hermes/
 .vscode/
 plan.html
-0
 sample-rota.csv
 sample-rota.xlsx
 # Package manager lockfiles (using pnpm)
 package-lock.json
 yarn.lock
+pnpm-lock.yaml
+pnpm-workspace.yaml
+
 
 # Drizzle
 drizzle/migrations/meta
