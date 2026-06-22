@@ -122,3 +122,23 @@ Items #1–#6 are labeled `auto-fix` (clear-cut, well-scoped). Items #7–#11 ar
 | #17 | #6, #7, #8, #9 | `agent/issue-group-6-error-handling-accessibility` | Error handling + accessibility |
 
 All 3 PRs built successfully. #1 already resolved by human merge.
+
+---
+
+## 2026-06-22 — Phase A+B (cron run)
+
+**Phase A — Discovery:** Verified all existing issues against codebase. #18 still valid (PR #23 open). #19 closed (repo renamed, link fixed). #20, #21, #22, #24 all valid. Scanned 8 categories — discovered 3 new issues:
+
+| # | Category | Title | Labels |
+|---|---|---|---|
+| #26 | duplication | PIN entry modal duplicated verbatim between index.tsx and history.tsx | needs-triage |
+| #27 | error handling | Empty catch swallows errors in admin refresh retry handler | needs-triage, auto-fix |
+| #28 | error handling | No validation on base64 input in rota upload — atob throws cryptic error | needs-triage, auto-fix |
+
+**Phase B — Implementation (1 PR):**
+
+| PR | Issues | Branch | Title |
+|---|---|---|---|
+| #29 | #27, #28 | `agent/issue-group-27-error-handling-hardening` | Error handling hardening |
+
+Build ✅. #26 awaits human triage.
