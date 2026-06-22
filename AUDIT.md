@@ -122,3 +122,22 @@ Items #1–#6 are labeled `auto-fix` (clear-cut, well-scoped). Items #7–#11 ar
 | #17 | #6, #7, #8, #9 | `agent/issue-group-6-error-handling-accessibility` | Error handling + accessibility |
 
 All 3 PRs built successfully. #1 already resolved by human merge.
+
+---
+
+## 2026-06-22 — Phase A+B (cron run 3)
+
+**Phase A — Discovery:** Verified existing issues against codebase. #18, #20, #21, #22, #24, #26, #27, #28 all still valid on main (3 open PRs awaiting human merge: #23, #25, #29). Scanned 8 categories — discovered 2 new issues:
+
+| # | Category | Title | Labels |
+|---|---|---|---|
+| #30 | doc-code drift | CONTEXT.md ADR-004 references /admin/print-qr instead of /print-qr | needs-triage, auto-fix |
+| #31 | duplication | SessionRow type duplicated between admin/-types.ts and history.tsx | needs-triage, auto-fix |
+
+**Phase B — Implementation (1 PR):**
+
+| PR | Issues | Branch | Title |
+|---|---|---|---|
+| #32 | #30, #31 | `agent/issue-group-30-doc-and-type-cleanup` | Doc and type cleanup |
+
+Build ✅. Both issues fixed: CONTEXT.md route path corrected, history.tsx `SessionRow` renamed to `HistorySessionRow` to avoid name collision with admin/-types.ts exports.

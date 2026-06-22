@@ -128,3 +128,12 @@ Issues #1–#6 filed with `auto-fix`; #7–#11 filed as `needs-triage` only.
 - **PR #17 — Error handling + accessibility (#6, #7, #8, #9):** Added `.catch()` handlers to getStatus (index.tsx) and getStaffHistory (history.tsx) with user-visible error messages. Added loadError state and error banner to history page. Added `aria-label` to 8 unlabelled inputs across admin.tsx, index.tsx, print-qr.tsx, RotaStaffSection.tsx. Added `role="dialog"`, `aria-modal="true"`, `aria-labelledby` to 4 modal dialogs (identity picker and PIN entry in index.tsx and history.tsx). Added `role="alertdialog"` to ConfirmDialog. Added `aria-label="Close"` to modal close buttons and `aria-label="Dismiss"` to message toast button. Added keyboard navigation (ArrowLeft/Right, Home/End) and ARIA slider attributes (role, valuenow, valuemin, valuemax, valuetext) to SlideButton component. 7 files changed, 132 insertions. Build ✅.
 
 **Summary:** 11 of 11 auto-fix issues processed across 3 PRs. Issue #1 resolved by human merge. All builds passing.
+
+## 2026-06-22 (cron run 3 — Phase A+B)
+
+**Phase A — Discovery:** Verified all existing issues (#18, #20, #21, #22, #24, #26, #27, #28) still valid on main. 3 open PRs (#23, #25, #29) awaiting human merge. Human refactor (Drizzle ORM, shadcn/ui sidebar, pnpm) landed on main — required `npm install` to restore `drizzle-orm` deps for build. Scanned all 8 categories — discovered 2 new issues: #30 (CONTEXT.md doc-code drift — `/admin/print-qr` vs actual route `/print-qr`) and #31 (SessionRow type duplication/name collision between admin/-types.ts and history.tsx).
+
+**Phase B — Implementation (#30, #31):**
+- **PR #32 — Doc and type cleanup:** Fixed CONTEXT.md ADR-004 route path from `/admin/print-qr` to `/print-qr`. Renamed history.tsx inline `SessionRow` to `HistorySessionRow` to avoid name collision with the exported `SessionRow` in admin/-types.ts. 2 files changed, 3 insertions, 3 deletions. Build ✅.
+
+**Status:** 2 of 2 auto-fix issues processed in PR #32. 3 open PRs (#23, #25, #29) still awaiting human merge for older issues. No further auto-fix issues remain.
