@@ -128,3 +128,14 @@ Issues #1–#6 filed with `auto-fix`; #7–#11 filed as `needs-triage` only.
 - **PR #17 — Error handling + accessibility (#6, #7, #8, #9):** Added `.catch()` handlers to getStatus (index.tsx) and getStaffHistory (history.tsx) with user-visible error messages. Added loadError state and error banner to history page. Added `aria-label` to 8 unlabelled inputs across admin.tsx, index.tsx, print-qr.tsx, RotaStaffSection.tsx. Added `role="dialog"`, `aria-modal="true"`, `aria-labelledby` to 4 modal dialogs (identity picker and PIN entry in index.tsx and history.tsx). Added `role="alertdialog"` to ConfirmDialog. Added `aria-label="Close"` to modal close buttons and `aria-label="Dismiss"` to message toast button. Added keyboard navigation (ArrowLeft/Right, Home/End) and ARIA slider attributes (role, valuenow, valuemin, valuemax, valuetext) to SlideButton component. 7 files changed, 132 insertions. Build ✅.
 
 **Summary:** 11 of 11 auto-fix issues processed across 3 PRs. Issue #1 resolved by human merge. All builds passing.
+
+## 2026-06-22 (cron run — Phase A+B)
+
+**Phase A — Discovery:** Scanned all 8 categories. Verified 31 existing issues in `ready-to-merge` state. Discovered 3 new issues:
+- #55: manifest.json PWA values outdated (old blue theme_color, old project name)
+- #56: Hardcoded box-shadow duplicated across 7 files instead of using `--shadow-card` token
+- #57: DailySummary.tsx "Late arrivals" uses old blue #2563eb
+
+**Phase B — Implementation (1 PR):**
+
+- **PR #58 — Design cleanup (#55, #56):** Updated `manifest.json` (theme_color → #ff385c, name → InOut). Replaced 8 instances of hardcoded multi-layer box-shadow string with `var(--shadow-card)` CSS variable reference across 6 TSX files (Card, admin.tsx PIN gate, index.tsx swipe/checkin/manual cards, admin/index.tsx StatCard, DailySummary, WhoIsInSection). Also fixed incidental #57 color in DailySummary (late arrivals accent → warning-600). 7 files changed. Build ✅.

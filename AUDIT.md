@@ -122,3 +122,25 @@ Items #1–#6 are labeled `auto-fix` (clear-cut, well-scoped). Items #7–#11 ar
 | #17 | #6, #7, #8, #9 | `agent/issue-group-6-error-handling-accessibility` | Error handling + accessibility |
 
 All 3 PRs built successfully. #1 already resolved by human merge.
+
+---
+
+## 2026-06-22 — Phase A discovery (cron run)
+
+All previous 11 issues (#1–#11) verified as `ready-to-merge` (PRs opened, awaiting human merge). 31 total issues in `ready-to-merge` state from prior runs.
+
+**New issues discovered and filed as GitHub issues:**
+
+| # | Category | Title | Labels |
+|---|---|---|---|
+| #55 | doc-code drift | manifest.json theme_color and name are outdated pre-redesign values | needs-triage, auto-fix |
+| #56 | duplication | Hardcoded box-shadow string duplicated across 7 files instead of using design token | needs-triage, auto-fix |
+| #57 | design consistency | DailySummary.tsx "Late arrivals" uses old blue #2563eb instead of warning tone | needs-triage |
+
+**Phase B — Implementation (1 PR):**
+
+| PR | Issues | Branch | Title |
+|---|---|---|---|
+| #58 | #55, #56 | `agent/issue-group-55-design-cleanup` | Design cleanup — PWA manifest + box-shadow dedup |
+
+Build ✅. 7 files changed across manifest.json + 6 TSX components.
