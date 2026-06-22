@@ -1,10 +1,9 @@
-import { User, Lock, ChevronRight } from 'lucide-react'
+import { User, ChevronRight } from 'lucide-react'
 
 type IdentityBarProps = {
   staffId: number | null
   staffName: string | null
   staffRole: string | null
-  isLocked: boolean
   onSelectClick: () => void
   onClear: () => void
 }
@@ -18,7 +17,6 @@ export function IdentityBar({
   staffId,
   staffName,
   staffRole,
-  isLocked,
   onSelectClick,
   onClear,
 }: IdentityBarProps) {
@@ -58,12 +56,6 @@ export function IdentityBar({
           ) : null}
         </span>
       </div>
-
-      {isLocked && (
-        <span title="Identity locked with PIN">
-          <Lock className="w-4 h-4 shrink-0 text-primary-500" />
-        </span>
-      )}
 
       <button
         type="button"

@@ -15,7 +15,11 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ApiExportDotcsvRouteImport } from './routes/api/export[.]csv'
+import { Route as AdminSessionsRouteImport } from './routes/admin/sessions'
+import { Route as AdminRosterRouteImport } from './routes/admin/roster'
+import { Route as AdminAuditRouteImport } from './routes/admin/audit'
 
 const QrRoute = QrRouteImport.update({
   id: '/qr',
@@ -47,39 +51,70 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiExportDotcsvRoute = ApiExportDotcsvRouteImport.update({
   id: '/api/export.csv',
   path: '/api/export.csv',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSessionsRoute = AdminSessionsRouteImport.update({
+  id: '/sessions',
+  path: '/sessions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRosterRoute = AdminRosterRouteImport.update({
+  id: '/roster',
+  path: '/roster',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/history': typeof HistoryRoute
   '/print-qr': typeof PrintQrRoute
   '/qr': typeof QrRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/roster': typeof AdminRosterRoute
+  '/admin/sessions': typeof AdminSessionsRoute
   '/api/export.csv': typeof ApiExportDotcsvRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
   '/history': typeof HistoryRoute
   '/print-qr': typeof PrintQrRoute
   '/qr': typeof QrRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/roster': typeof AdminRosterRoute
+  '/admin/sessions': typeof AdminSessionsRoute
   '/api/export.csv': typeof ApiExportDotcsvRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/history': typeof HistoryRoute
   '/print-qr': typeof PrintQrRoute
   '/qr': typeof QrRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/roster': typeof AdminRosterRoute
+  '/admin/sessions': typeof AdminSessionsRoute
   '/api/export.csv': typeof ApiExportDotcsvRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,16 +125,23 @@ export interface FileRouteTypes {
     | '/history'
     | '/print-qr'
     | '/qr'
+    | '/admin/audit'
+    | '/admin/roster'
+    | '/admin/sessions'
     | '/api/export.csv'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
-    | '/admin'
     | '/history'
     | '/print-qr'
     | '/qr'
+    | '/admin/audit'
+    | '/admin/roster'
+    | '/admin/sessions'
     | '/api/export.csv'
+    | '/admin'
   id:
     | '__root__'
     | '/'
@@ -108,13 +150,17 @@ export interface FileRouteTypes {
     | '/history'
     | '/print-qr'
     | '/qr'
+    | '/admin/audit'
+    | '/admin/roster'
+    | '/admin/sessions'
     | '/api/export.csv'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   HistoryRoute: typeof HistoryRoute
   PrintQrRoute: typeof PrintQrRoute
   QrRoute: typeof QrRoute
@@ -165,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/export.csv': {
       id: '/api/export.csv'
       path: '/api/export.csv'
@@ -172,13 +225,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExportDotcsvRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/sessions': {
+      id: '/admin/sessions'
+      path: '/sessions'
+      fullPath: '/admin/sessions'
+      preLoaderRoute: typeof AdminSessionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/roster': {
+      id: '/admin/roster'
+      path: '/roster'
+      fullPath: '/admin/roster'
+      preLoaderRoute: typeof AdminRosterRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminAuditRoute: typeof AdminAuditRoute
+  AdminRosterRoute: typeof AdminRosterRoute
+  AdminSessionsRoute: typeof AdminSessionsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAuditRoute: AdminAuditRoute,
+  AdminRosterRoute: AdminRosterRoute,
+  AdminSessionsRoute: AdminSessionsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   HistoryRoute: HistoryRoute,
   PrintQrRoute: PrintQrRoute,
   QrRoute: QrRoute,

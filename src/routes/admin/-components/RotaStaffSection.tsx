@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { Button } from '#/components/Button'
 import { formatDate } from '#/utils/dateTime'
-import { Upload, UserPlus, ChevronDown, ChevronRight } from 'lucide-react'
+import { Upload, UserPlus } from 'lucide-react'
 
 export function RotaStaffSection({
   onUpload,

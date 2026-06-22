@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { adminWeeklyRollup } from '#/utils/sessions.functions'
 import { getWeekStart, addDays, formatDate } from '#/utils/dateTime'
 import { EmptyState } from '#/components/EmptyState'
-import { Card } from '#/components/Card'
 
 type RollupRow = { name: string; date: string; hours: number }
 

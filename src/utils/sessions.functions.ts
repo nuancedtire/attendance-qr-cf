@@ -1,10 +1,14 @@
 import { createServerFn } from '@tanstack/react-start'
-import type { D1Database } from '@cloudflare/workers-types'
 import { getDb } from '#/db/client'
-import type { RosterEntry, Session } from '#/db/schema'
-import { verifyAdminPin, deriveTokenForDate, createSessionToken, requireAdmin } from './auth'
+import { rotas, rosterEntries, sessions, auditLog } from '#/db/schema'
+import { eq, and, isNull, isNotNull, sql, desc, asc, gte, lte, inArray } from 'drizzle-orm'
+import type { DrizzleD1Database } from 'drizzle-orm/d1'
+import * as schema from '#/db/schema'
+import { verifyAdminPin, createSessionToken, requireAdmin } from './auth'
 import { logAudit } from './audit'
 import { todayDate } from './dateTime'
+
+type Db = DrizzleD1Database<typeof schema>
 
 // ═══════════════════════════════════════════════════════════════════
 // Shared DB helpers — single source of truth for all queries
@@ -27,19 +31,21 @@ function checkRateLimit(key: string): void {
 async function getRotaForDate(date: string) {
   const db = await getDb()
   return db
-    .prepare('SELECT id, token FROM rotas WHERE date = ?')
-    .bind(date)
-    .first<{ id: number; token: string }>()
+    .select({ id: rotas.id, token: rotas.token })
+    .from(rotas)
+    .where(eq(rotas.date, date))
+    .get()
 }
 
 async function getCurrentSessionForEntry(entryId: number) {
   const db = await getDb()
   return db
-    .prepare(
-      'SELECT * FROM sessions WHERE roster_entry_id = ? AND check_out_at IS NULL ORDER BY id DESC LIMIT 1',
-    )
-    .bind(entryId)
-    .first<Session>()
+    .select()
+    .from(sessions)
+    .where(and(eq(sessions.rosterEntryId, entryId), isNull(sessions.checkOutAt)))
+    .orderBy(desc(sessions.id))
+    .limit(1)
+    .get()
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -71,9 +77,10 @@ export const checkIn = createServerFn({ method: 'POST' })
     }
 
     const entry = await db
-      .prepare('SELECT * FROM roster_entries WHERE id = ?')
-      .bind(data.rosterEntryId)
-      .first<RosterEntry>()
+      .select()
+      .from(rosterEntries)
+      .where(eq(rosterEntries.id, data.rosterEntryId))
+      .get()
 
     if (!entry) throw new Error('Staff not found')
 
@@ -82,20 +89,22 @@ export const checkIn = createServerFn({ method: 'POST' })
     // INSERT first — let the partial unique index catch duplicates
     // instead of SELECT-then-INSERT (race condition prone)
     try {
-      const result = await db
-        .prepare(
-          'INSERT INTO sessions (roster_entry_id, check_in_at, qr_token_in) VALUES (?, ?, ?)',
-        )
-        .bind(entry.id, now, data.token)
-        .run<{ id: number }>()
+      const [inserted] = await db
+        .insert(sessions)
+        .values({
+          rosterEntryId: entry.id,
+          checkInAt: now,
+          qrTokenIn: data.token,
+        })
+        .returning({ id: sessions.id })
 
       await logAudit(
         'checked_in',
-        { entryId: entry.id, name: entry.name, sessionId: result.meta?.last_row_id },
+        { entryId: entry.id, name: entry.name, sessionId: inserted.id },
         'staff',
       )
 
-      return { ok: true, at: now, sessionId: result.meta?.last_row_id }
+      return { ok: true, at: now, sessionId: inserted.id }
     } catch (e: unknown) {
       // Unique constraint violation → already checked in
       if (e instanceof Error && (e.message.includes('UNIQUE') || e.message.includes('unique'))) {
@@ -124,18 +133,19 @@ export const checkOut = createServerFn({ method: 'POST' })
 
     const now = new Date().toISOString()
     await db
-      .prepare('UPDATE sessions SET check_out_at = ?, qr_token_out = ? WHERE id = ?')
-      .bind(now, data.token, session.id)
-      .run()
+      .update(sessions)
+      .set({ checkOutAt: now, qrTokenOut: data.token })
+      .where(eq(sessions.id, session.id))
 
     const entry = await db
-      .prepare('SELECT name FROM roster_entries WHERE id = ?')
-      .bind(session.roster_entry_id)
-      .first<{ name: string }>()
+      .select({ name: rosterEntries.name })
+      .from(rosterEntries)
+      .where(eq(rosterEntries.id, session.rosterEntryId))
+      .get()
 
     await logAudit(
       'checked_out',
-      { entryId: session.roster_entry_id, name: entry?.name, sessionId: session.id },
+      { entryId: session.rosterEntryId, name: entry?.name, sessionId: session.id },
       'staff',
     )
 
@@ -160,25 +170,26 @@ export const undoLastAction = createServerFn({ method: 'POST' })
     if (!session) {
       // Undo last checkout: find the most recent closed session
       const lastClosed = await db
-        .prepare(
-          'SELECT * FROM sessions WHERE roster_entry_id = ? AND check_out_at IS NOT NULL ORDER BY id DESC LIMIT 1',
-        )
-        .bind(data.rosterEntryId)
-        .first<Session>()
+        .select()
+        .from(sessions)
+        .where(and(eq(sessions.rosterEntryId, data.rosterEntryId), isNotNull(sessions.checkOutAt)))
+        .orderBy(desc(sessions.id))
+        .limit(1)
+        .get()
 
       if (!lastClosed) throw new Error('Nothing to undo')
 
       await db
-        .prepare('UPDATE sessions SET check_out_at = NULL, qr_token_out = NULL WHERE id = ?')
-        .bind(lastClosed.id)
-        .run()
+        .update(sessions)
+        .set({ checkOutAt: null, qrTokenOut: null })
+        .where(eq(sessions.id, lastClosed.id))
 
       await logAudit('checkout_undone', { entryId: data.rosterEntryId, sessionId: lastClosed.id }, 'staff')
       return { ok: true, action: 'checkout_undone' }
     }
 
     // Undo check-in: delete the open session
-    await db.prepare('DELETE FROM sessions WHERE id = ?').bind(session.id).run()
+    await db.delete(sessions).where(eq(sessions.id, session.id))
     await logAudit('checkin_undone', { entryId: data.rosterEntryId, sessionId: session.id }, 'staff')
     return { ok: true, action: 'checkin_undone' }
   })
@@ -191,7 +202,7 @@ export const getStatus = createServerFn({ method: 'GET' })
     return {
       checkedIn: !!session,
       sessionId: session?.id ?? null,
-      checkInAt: session?.check_in_at ?? null,
+      checkInAt: session?.checkInAt ?? null,
     }
   })
 
@@ -211,26 +222,35 @@ export const manualCheckIn = createServerFn({ method: 'POST' })
       throw new Error('Invalid or expired QR code')
     }
 
-    const entryResult = await db
-      .prepare('INSERT INTO roster_entries (rota_id, name, role, source) VALUES (?, ?, ?, ?)')
-      .bind(rota.id, data.name, data.role || null, 'manual')
-      .run<{ id: number }>()
+    const [entryInserted] = await db
+      .insert(rosterEntries)
+      .values({
+        rotaId: rota.id,
+        name: data.name,
+        role: data.role || null,
+        source: 'manual',
+      })
+      .returning({ id: rosterEntries.id })
 
-    const entryId = entryResult.meta!.last_row_id!
+    const entryId = entryInserted.id
     const now = new Date().toISOString()
 
-    const sessResult = await db
-      .prepare('INSERT INTO sessions (roster_entry_id, check_in_at, qr_token_in) VALUES (?, ?, ?)')
-      .bind(entryId, now, data.token)
-      .run<{ id: number }>()
+    const [sessInserted] = await db
+      .insert(sessions)
+      .values({
+        rosterEntryId: entryId,
+        checkInAt: now,
+        qrTokenIn: data.token,
+      })
+      .returning({ id: sessions.id })
 
     await logAudit(
       'manual_checkin',
-      { entryId, name: data.name, role: data.role, sessionId: sessResult.meta?.last_row_id },
+      { entryId, name: data.name, role: data.role, sessionId: sessInserted.id },
       'staff',
     )
 
-    return { ok: true, entryId, sessionId: sessResult.meta?.last_row_id }
+    return { ok: true, entryId, sessionId: sessInserted.id }
   })
 
 export const getStaffHistory = createServerFn({ method: 'POST' })
@@ -245,39 +265,51 @@ export const getStaffHistory = createServerFn({ method: 'POST' })
     }
 
     const result = await db
-      .prepare(
-        `SELECT r.date, e.shift_start, e.shift_end, s.check_in_at, s.check_out_at,
-                (julianday(s.check_out_at) - julianday(s.check_in_at)) * 24 AS hours
-         FROM sessions s
-         JOIN roster_entries e ON e.id = s.roster_entry_id
-         JOIN rotas r ON r.id = e.rota_id
-         WHERE s.roster_entry_id = ? AND s.check_out_at IS NOT NULL
-         ORDER BY s.check_in_at DESC`,
-      )
-      .bind(data.rosterEntryId)
-      .all<{
-        date: string
-        shift_start: string | null
-        shift_end: string | null
-        check_in_at: string
-        check_out_at: string
-        hours: number | null
-      }>()
+      .select({
+        date: rotas.date,
+        shiftStart: rosterEntries.shiftStart,
+        shiftEnd: rosterEntries.shiftEnd,
+        checkInAt: sessions.checkInAt,
+        checkOutAt: sessions.checkOutAt,
+        hours: sql<number>`(julianday(${sessions.checkOutAt}) - julianday(${sessions.checkInAt})) * 24`.mapWith(Number),
+      })
+      .from(sessions)
+      .innerJoin(rosterEntries, eq(rosterEntries.id, sessions.rosterEntryId))
+      .innerJoin(rotas, eq(rotas.id, rosterEntries.rotaId))
+      .where(and(
+        eq(sessions.rosterEntryId, data.rosterEntryId),
+        isNotNull(sessions.checkOutAt),
+      ))
+      .orderBy(desc(sessions.checkInAt))
+      .all()
 
-    return { rows: result.results ?? [] }
+    // Map Drizzle camelCase back to snake_case for UI compatibility.
+    // checkOutAt is non-null because WHERE filters for check_out_at IS NOT NULL.
+    return {
+      rows: result.map((r) => ({
+        date: r.date,
+        shift_start: r.shiftStart,
+        shift_end: r.shiftEnd,
+        check_in_at: r.checkInAt,
+        check_out_at: r.checkOutAt as string,
+        hours: r.hours,
+      })),
+    }
   })
 
 // ═══════════════════════════════════════════════════════════════════
 // Admin dashboard — single endpoint (was 4 separate queries)
 // ═══════════════════════════════════════════════════════════════════
 
-function safeJsonParse(raw: string | null | undefined): Record<string, unknown> | null {
+type SerializableValue = string | number | boolean | null | SerializableValue[] | { [key: string]: SerializableValue }
+
+function safeJsonParse(raw: string | null | undefined): Record<string, SerializableValue> | { raw: SerializableValue } | null {
   if (!raw) return null
   try {
-    const parsed = JSON.parse(raw)
+    const parsed: unknown = JSON.parse(raw)
     return typeof parsed === 'object' && parsed !== null
-      ? (parsed as Record<string, unknown>)
-      : { raw: parsed }
+      ? (parsed as Record<string, SerializableValue>)
+      : { raw: parsed as SerializableValue }
   } catch {
     return { raw }
   }
@@ -292,14 +324,14 @@ export const adminGetDashboard = createServerFn({ method: 'POST' })
     const rota = await getRotaForDate(data.date)
 
     // Build all responses in parallel — they're independent reads
-    const [roster, whoIsIn, sessions, audit] = await Promise.all([
+    const [roster, whoIsIn, sessRows, audit] = await Promise.all([
       getRosterWithStatusImpl(db, rota?.id),
       getWhoIsInImpl(db, rota?.id),
       getSessionHistoryImpl(db, rota?.id),
       getAuditLogImpl(db),
     ])
 
-    return { entries: roster, present: whoIsIn, sessions, audit }
+    return { entries: roster, present: whoIsIn, sessions: sessRows, audit }
   })
 
 // ═══════════════════════════════════════════════════════════════════
@@ -322,27 +354,30 @@ export const adminUpdateSession = createServerFn({ method: 'POST' })
 
     if (data.sessionId && data.checkOutAt !== undefined) {
       await db
-        .prepare('UPDATE sessions SET check_out_at = ? WHERE id = ?')
-        .bind(data.checkOutAt || null, data.sessionId)
-        .run()
+        .update(sessions)
+        .set({ checkOutAt: data.checkOutAt || null })
+        .where(eq(sessions.id, data.sessionId))
       await logAudit('admin_session_updated', { sessionId: data.sessionId, checkOutAt: data.checkOutAt }, 'admin')
       return { ok: true }
     }
 
     if (data.sessionId && data.checkInAt !== undefined) {
       await db
-        .prepare('UPDATE sessions SET check_in_at = ? WHERE id = ?')
-        .bind(data.checkInAt, data.sessionId)
-        .run()
+        .update(sessions)
+        .set({ checkInAt: data.checkInAt })
+        .where(eq(sessions.id, data.sessionId))
       await logAudit('admin_session_updated', { sessionId: data.sessionId, checkInAt: data.checkInAt }, 'admin')
       return { ok: true }
     }
 
     if (data.rosterEntryId && data.checkInAt) {
       await db
-        .prepare('INSERT INTO sessions (roster_entry_id, check_in_at, qr_token_in) VALUES (?, ?, ?)')
-        .bind(data.rosterEntryId, data.checkInAt, 'manual')
-        .run()
+        .insert(sessions)
+        .values({
+          rosterEntryId: data.rosterEntryId,
+          checkInAt: data.checkInAt,
+          qrTokenIn: 'manual',
+        })
       await logAudit('admin_manual_checkin', { rosterEntryId: data.rosterEntryId, checkInAt: data.checkInAt }, 'admin')
       return { ok: true }
     }
@@ -355,7 +390,7 @@ export const adminDeleteSession = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await requireAdmin({ token: data.authToken })
     const db = await getDb()
-    await db.prepare('DELETE FROM sessions WHERE id = ?').bind(data.sessionId).run()
+    await db.delete(sessions).where(eq(sessions.id, data.sessionId))
     await logAudit('admin_session_deleted', { sessionId: data.sessionId }, 'admin')
     return { ok: true }
   })
@@ -367,11 +402,12 @@ export const adminDeleteRosterEntry = createServerFn({ method: 'POST' })
     const db = await getDb()
 
     const entry = await db
-      .prepare('SELECT name FROM roster_entries WHERE id = ?')
-      .bind(data.entryId)
-      .first<{ name: string }>()
+      .select({ name: rosterEntries.name })
+      .from(rosterEntries)
+      .where(eq(rosterEntries.id, data.entryId))
+      .get()
 
-    await db.prepare('DELETE FROM roster_entries WHERE id = ?').bind(data.entryId).run()
+    await db.delete(rosterEntries).where(eq(rosterEntries.id, data.entryId))
     await logAudit('roster_entry_deleted', { entryId: data.entryId, name: entry?.name }, 'admin')
     return { ok: true }
   })
@@ -382,25 +418,33 @@ export const adminExportSessions = createServerFn({ method: 'POST' })
     await requireAdmin({ token: data.authToken })
     const db = await getDb()
     const result = await db
-      .prepare(
-        `SELECT e.name, e.role, s.check_in_at, s.check_out_at,
-                (julianday(s.check_out_at) - julianday(s.check_in_at)) * 24 AS hours
-         FROM sessions s
-         JOIN roster_entries e ON e.id = s.roster_entry_id
-         JOIN rotas r ON r.id = e.rota_id
-         WHERE r.date >= ? AND r.date <= ?
-         ORDER BY s.check_in_at DESC`,
-      )
-      .bind(data.startDate, data.endDate)
-      .all<{
-        name: string
-        role: string | null
-        check_in_at: string
-        check_out_at: string | null
-        hours: number | null
-      }>()
+      .select({
+        name: rosterEntries.name,
+        role: rosterEntries.role,
+        checkInAt: sessions.checkInAt,
+        checkOutAt: sessions.checkOutAt,
+        hours: sql<number>`(julianday(${sessions.checkOutAt}) - julianday(${sessions.checkInAt})) * 24`.mapWith(Number),
+      })
+      .from(sessions)
+      .innerJoin(rosterEntries, eq(rosterEntries.id, sessions.rosterEntryId))
+      .innerJoin(rotas, eq(rotas.id, rosterEntries.rotaId))
+      .where(and(
+        gte(rotas.date, data.startDate),
+        lte(rotas.date, data.endDate),
+      ))
+      .orderBy(desc(sessions.checkInAt))
+      .all()
 
-    return { rows: result.results ?? [] }
+    // Map Drizzle camelCase back to snake_case for UI compatibility
+    return {
+      rows: result.map((r) => ({
+        name: r.name,
+        role: r.role,
+        check_in_at: r.checkInAt,
+        check_out_at: r.checkOutAt,
+        hours: r.hours,
+      })),
+    }
   })
 
 export const adminWeeklyRollup = createServerFn({ method: 'POST' })
@@ -409,19 +453,23 @@ export const adminWeeklyRollup = createServerFn({ method: 'POST' })
     await requireAdmin({ token: data.authToken })
     const db = await getDb()
     const result = await db
-      .prepare(
-        `SELECT e.name, r.date,
-                ROUND((julianday(s.check_out_at) - julianday(s.check_in_at)) * 24, 2) AS hours
-         FROM sessions s
-         JOIN roster_entries e ON e.id = s.roster_entry_id
-         JOIN rotas r ON r.id = e.rota_id
-         WHERE r.date >= ? AND r.date <= ? AND s.check_out_at IS NOT NULL
-         ORDER BY e.name, r.date`,
-      )
-      .bind(data.weekStart, data.weekEnd)
-      .all<{ name: string; date: string; hours: number }>()
+      .select({
+        name: rosterEntries.name,
+        date: rotas.date,
+        hours: sql<number>`ROUND((julianday(${sessions.checkOutAt}) - julianday(${sessions.checkInAt})) * 24, 2)`.mapWith(Number),
+      })
+      .from(sessions)
+      .innerJoin(rosterEntries, eq(rosterEntries.id, sessions.rosterEntryId))
+      .innerJoin(rotas, eq(rotas.id, rosterEntries.rotaId))
+      .where(and(
+        gte(rotas.date, data.weekStart),
+        lte(rotas.date, data.weekEnd),
+        isNotNull(sessions.checkOutAt),
+      ))
+      .orderBy(asc(rosterEntries.name), asc(rotas.date))
+      .all()
 
-    return { rows: result.results ?? [] }
+    return { rows: result }
   })
 
 /**
@@ -440,22 +488,25 @@ export const runAutoCheckout = createServerFn({ method: 'POST' })
     const now = new Date().toISOString()
 
     // Update sessions whose owning entry's shift ended >60 min ago
-    const result = await db
-      .prepare(
-        `UPDATE sessions
-         SET check_out_at = ?, qr_token_out = 'auto'
-         WHERE check_out_at IS NULL
-           AND roster_entry_id IN (
-             SELECT e.id FROM roster_entries e
-             WHERE e.rota_id = ?
-               AND e.shift_end IS NOT NULL
-               AND datetime(? || ' ' || e.shift_end, '+60 minutes') < datetime(?)
-           )`,
-      )
-      .bind(now, rota.id, date, now)
-      .run()
+    const updated = await db
+      .update(sessions)
+      .set({ checkOutAt: now, qrTokenOut: 'auto' })
+      .where(and(
+        isNull(sessions.checkOutAt),
+        inArray(
+          sessions.rosterEntryId,
+          db.select({ id: rosterEntries.id })
+            .from(rosterEntries)
+            .where(and(
+              eq(rosterEntries.rotaId, rota.id),
+              isNotNull(rosterEntries.shiftEnd),
+              sql`datetime(${date} || ' ' || ${rosterEntries.shiftEnd}, '+60 minutes') < datetime(${now})`
+            )),
+        ),
+      ))
+      .returning({ id: sessions.id })
 
-    const closed = result.meta?.changes ?? 0
+    const closed = updated.length
     await logAudit('auto_checkout_run', { date, closed }, 'system')
     return { closed }
   })
@@ -470,11 +521,12 @@ export const adminPruneAuditLog = createServerFn({ method: 'POST' })
     await requireAdmin({ token: data.authToken })
     const db = await getDb()
     const days = data.retentionDays ?? 90
-    const result = await db
-      .prepare(`DELETE FROM audit_log WHERE created_at < datetime('now', ?)`)
-      .bind(`-${days} days`)
-      .run()
-    const pruned = result.meta?.changes ?? 0
+    const deleted = await db
+      .delete(auditLog)
+      .where(sql`${auditLog.createdAt} < datetime('now', ${`-${days} days`})`)
+      .returning({ id: auditLog.id })
+
+    const pruned = deleted.length
     if (pruned > 0) {
       await logAudit('audit_pruned', { retentionDays: days, pruned }, 'system')
     }
@@ -486,108 +538,153 @@ export const adminPruneAuditLog = createServerFn({ method: 'POST' })
 // ═══════════════════════════════════════════════════════════════════
 
 async function getRosterWithStatusImpl(
-  db: D1Database,
+  db: Db,
   rotaId: number | undefined,
-): Promise<(RosterEntry & { checkedIn: boolean; checkInAt: string | null; checkOutAt: string | null })[]> {
+): Promise<
+  {
+    id: number
+    rota_id: number
+    name: string
+    role: string | null
+    shift_start: string | null
+    shift_end: string | null
+    source: string
+    created_at: string
+    checkedIn: boolean
+    checkInAt: string | null
+    checkOutAt: string | null
+  }[]
+> {
   if (!rotaId) return []
 
-  const entriesResult = await db
-    .prepare('SELECT * FROM roster_entries WHERE rota_id = ? ORDER BY name')
-    .bind(rotaId)
-    .all<RosterEntry>()
+  const entries = await db
+    .select()
+    .from(rosterEntries)
+    .where(eq(rosterEntries.rotaId, rotaId))
+    .orderBy(asc(rosterEntries.name))
+    .all()
 
-  const entries = entriesResult.results ?? ([] as RosterEntry[])
   if (entries.length === 0) return []
 
   // Use subquery instead of IN (?,?,?) to avoid binding limits
   const sessionsResult = await db
-    .prepare(
-      `SELECT roster_entry_id, check_in_at, check_out_at
-       FROM sessions
-       WHERE roster_entry_id IN (SELECT id FROM roster_entries WHERE rota_id = ?)
-       ORDER BY id DESC`,
-    )
-    .bind(rotaId)
-    .all<Pick<Session, 'roster_entry_id' | 'check_in_at' | 'check_out_at'>>()
+    .select({
+      rosterEntryId: sessions.rosterEntryId,
+      checkInAt: sessions.checkInAt,
+      checkOutAt: sessions.checkOutAt,
+    })
+    .from(sessions)
+    .where(inArray(
+      sessions.rosterEntryId,
+      db.select({ id: rosterEntries.id }).from(rosterEntries).where(eq(rosterEntries.rotaId, rotaId)),
+    ))
+    .orderBy(desc(sessions.id))
+    .all()
 
-  const sessions = sessionsResult.results ?? []
   const latestSessionByEntry = new Map<
     number,
-    Pick<Session, 'roster_entry_id' | 'check_in_at' | 'check_out_at'>
+    { rosterEntryId: number; checkInAt: string; checkOutAt: string | null }
   >()
-  for (const s of sessions) {
-    if (!latestSessionByEntry.has(s.roster_entry_id)) {
-      latestSessionByEntry.set(s.roster_entry_id, s)
+  for (const s of sessionsResult) {
+    if (!latestSessionByEntry.has(s.rosterEntryId)) {
+      latestSessionByEntry.set(s.rosterEntryId, s)
     }
   }
 
+  // Map Drizzle camelCase back to snake_case for UI compatibility
   return entries.map((e) => {
     const latest = latestSessionByEntry.get(e.id)
     return {
-      ...e,
-      checkedIn: latest ? latest.check_out_at === null : false,
-      checkInAt: latest?.check_in_at ?? null,
-      checkOutAt: latest?.check_out_at ?? null,
+      id: e.id,
+      rota_id: e.rotaId,
+      name: e.name,
+      role: e.role,
+      shift_start: e.shiftStart,
+      shift_end: e.shiftEnd,
+      source: e.source,
+      created_at: e.createdAt,
+      checkedIn: latest ? latest.checkOutAt === null : false,
+      checkInAt: latest?.checkInAt ?? null,
+      checkOutAt: latest?.checkOutAt ?? null,
     }
   })
 }
 
 async function getWhoIsInImpl(
-  db: D1Database,
+  db: Db,
   rotaId: number | undefined,
 ): Promise<{ id: number; name: string; role: string | null; check_in_at: string }[]> {
   if (!rotaId) return []
 
   const result = await db
-    .prepare(
-      `SELECT e.id, e.name, e.role, s.check_in_at
-       FROM roster_entries e
-       JOIN sessions s ON s.roster_entry_id = e.id
-       WHERE e.rota_id = ? AND s.check_out_at IS NULL
-       ORDER BY s.check_in_at DESC`,
-    )
-    .bind(rotaId)
-    .all<RosterEntry & { check_in_at: string }>()
+    .select({
+      id: rosterEntries.id,
+      name: rosterEntries.name,
+      role: rosterEntries.role,
+      checkInAt: sessions.checkInAt,
+    })
+    .from(rosterEntries)
+    .innerJoin(sessions, eq(sessions.rosterEntryId, rosterEntries.id))
+    .where(and(
+      eq(rosterEntries.rotaId, rotaId),
+      isNull(sessions.checkOutAt),
+    ))
+    .orderBy(desc(sessions.checkInAt))
+    .all()
 
-  return (result.results ?? []) as {
-    id: number
-    name: string
-    role: string | null
-    check_in_at: string
-  }[]
+  return result.map((r) => ({
+    id: r.id,
+    name: r.name,
+    role: r.role,
+    check_in_at: r.checkInAt,
+  }))
 }
 
 async function getSessionHistoryImpl(
-  db: D1Database,
+  db: Db,
   rotaId: number | undefined,
 ): Promise<{ id: number; name: string; role: string | null; check_in_at: string; check_out_at: string | null }[]> {
   if (!rotaId) return []
 
   const result = await db
-    .prepare(
-      `SELECT s.id, e.name, e.role, s.check_in_at, s.check_out_at
-       FROM sessions s
-       JOIN roster_entries e ON e.id = s.roster_entry_id
-       WHERE e.rota_id = ?
-       ORDER BY s.check_in_at DESC`,
-    )
-    .bind(rotaId)
-    .all<{ id: number; name: string; role: string | null; check_in_at: string; check_out_at: string | null }>()
+    .select({
+      id: sessions.id,
+      name: rosterEntries.name,
+      role: rosterEntries.role,
+      checkInAt: sessions.checkInAt,
+      checkOutAt: sessions.checkOutAt,
+    })
+    .from(sessions)
+    .innerJoin(rosterEntries, eq(rosterEntries.id, sessions.rosterEntryId))
+    .where(eq(rosterEntries.rotaId, rotaId))
+    .orderBy(desc(sessions.checkInAt))
+    .all()
 
-  return result.results ?? []
+  return result.map((r) => ({
+    id: r.id,
+    name: r.name,
+    role: r.role,
+    check_in_at: r.checkInAt,
+    check_out_at: r.checkOutAt,
+  }))
 }
 
 async function getAuditLogImpl(
-  db: D1Database,
+  db: Db,
   limit = 50,
-): Promise<{ id: number; event: string; details: Record<string, unknown> | null; actor: string | null; created_at: string }[]> {
+): Promise<{ id: number; event: string; details: Record<string, SerializableValue> | { raw: SerializableValue } | null; actor: string | null; created_at: string }[]> {
   const result = await db
-    .prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT ?')
-    .bind(limit)
-    .all<{ id: number; event: string; details: string | null; actor: string | null; created_at: string }>()
+    .select()
+    .from(auditLog)
+    .orderBy(desc(auditLog.id))
+    .limit(limit)
+    .all()
 
-  return (result.results ?? []).map((e) => ({
-    ...e,
+  return result.map((e) => ({
+    id: e.id,
+    event: e.event,
     details: safeJsonParse(e.details),
+    actor: e.actor,
+    created_at: e.createdAt,
   }))
 }

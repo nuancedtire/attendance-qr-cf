@@ -11,7 +11,7 @@ import { Badge } from '#/components/Badge'
 import { IdentityBar } from '#/components/IdentityBar'
 import SlideButton from '#/components/SlideButton'
 import { useStaffIdentity } from '#/routes/-hooks'
-import { Undo2, UserPlus, Users, Clock, X, Lock, User } from 'lucide-react'
+import { Undo2, UserPlus, Users, Clock, X, User } from 'lucide-react'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -42,9 +42,9 @@ function HomePage() {
   const { token } = Route.useSearch()
 
   const {
-    staffId, isLocked, showPinEntry, showIdentityPicker,
-    selectIdentity, clearIdentity, lockIdentity, unlockIdentity,
-    setShowPinEntry, setShowIdentityPicker,
+    staffId, showIdentityPicker,
+    selectIdentity, clearIdentity,
+    setShowIdentityPicker,
   } = useStaffIdentity(entries as { id: number; name: string; role: string | null }[])
 
   const [message, setMessage] = useState<Message | null>(null)
@@ -56,11 +56,8 @@ function HomePage() {
   const [manualName, setManualName] = useState('')
   const [manualRole, setManualRole] = useState('')
   const [showManual, setShowManual] = useState(false)
-  const [pinInput, setPinInput] = useState('')
-  const [pinMode, setPinMode] = useState<'lock' | 'unlock'>('unlock')
-  const [pinError, setPinError] = useState('')
 
-  const currentStaff = entries.find((e) => e.id === staffId) ?? null
+  const currentStaff = entries.find((e: { id: number; name: string; role: string | null }) => e.id === staffId) ?? null
 
   // Load status when staffId or token changes
   useEffect(() => {
@@ -148,29 +145,6 @@ function HomePage() {
     }
   }
 
-  // ── PIN modal handlers ────────────────────────────────────────
-
-  const openPinForLock = () => { setPinMode('lock'); setPinInput(''); setPinError(''); setShowPinEntry(true) }
-  const openPinForUnlock = () => { setPinMode('unlock'); setPinInput(''); setPinError(''); setShowPinEntry(true) }
-
-  const handlePinSubmit = () => {
-    if (pinMode === 'lock') {
-      if (lockIdentity(pinInput)) {
-        setShowPinEntry(false)
-        showMessage('Identity locked 🔒', 'info')
-      } else {
-        setPinError('Enter a 4-digit PIN')
-      }
-    } else {
-      if (unlockIdentity(pinInput)) {
-        setShowPinEntry(false)
-        showMessage('Identity unlocked', 'info')
-      } else {
-        setPinError('Wrong PIN')
-      }
-    }
-  }
-
   // ── No rota state ─────────────────────────────────────────────
 
   if (!rota) {
@@ -214,9 +188,8 @@ function HomePage() {
         staffId={staffId}
         staffName={currentStaff?.name ?? null}
         staffRole={currentStaff?.role ?? null}
-        isLocked={isLocked}
         onSelectClick={() => setShowIdentityPicker(true)}
-        onClear={isLocked ? openPinForUnlock : () => { clearIdentity(); showMessage('Identity cleared', 'info') }}
+        onClear={() => { clearIdentity(); showMessage('Identity cleared', 'info') }}
       />
 
       {/* ── Slide action area ─────────────────────────────────── */}
@@ -278,19 +251,6 @@ function HomePage() {
             Undo last action
           </button>
         </Card>
-      )}
-
-      {/* Lock identity prompt (when identity selected but not locked) */}
-      {staffId && !isLocked && (
-        <button
-          type="button"
-          onClick={openPinForLock}
-          className="w-full flex items-center justify-center gap-2 py-2 text-sm
-            text-neutral-400 hover:text-neutral-600 transition-colors"
-        >
-          <Lock className="w-3.5 h-3.5" />
-          Lock your identity with a PIN
-        </button>
       )}
 
       {/* Locum / manual entry */}
@@ -414,7 +374,7 @@ function HomePage() {
             </div>
 
             <div className="overflow-y-auto max-h-[50vh]">
-              {entries.map((entry) => (
+              {entries.map((entry: { id: number; name: string; role: string | null }) => (
                 <button
                   key={entry.id}
                   type="button"
@@ -443,17 +403,27 @@ function HomePage() {
             </div>
 
             {staffId && (
-              <div className="px-4 py-3 border-t border-neutral-100">
+              <div className="px-4 py-3 border-t border-neutral-100 space-y-2">
                 <button
                   type="button"
                   onClick={() => {
                     setShowIdentityPicker(false)
-                    if (isLocked) openPinForUnlock()
-                    else { clearIdentity(); showMessage('Identity cleared', 'info') }
+                    clearIdentity()
+                    showMessage('Identity cleared', 'info')
                   }}
                   className="w-full text-sm text-neutral-500 hover:text-danger-600 py-1.5 transition-colors"
                 >
                   Clear my identity
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.clear()
+                    window.location.reload()
+                  }}
+                  className="w-full text-xs text-neutral-400 hover:text-neutral-600 py-1 transition-colors"
+                >
+                  Reset everything
                 </button>
               </div>
             )}
@@ -461,71 +431,6 @@ function HomePage() {
         </div>
       )}
 
-      {/* ── PIN entry modal ────────────────────────────────────── */}
-      {showPinEntry && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="pin-modal-title"
-          onClick={() => setShowPinEntry(false)}
-        >
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div
-            className="relative bg-white rounded-2xl w-full max-w-xs mx-4 shadow-xl p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Lock className="w-5 h-5 text-primary-600" />
-              <h2 id="pin-modal-title" className="text-lg font-semibold text-neutral-900">
-                {pinMode === 'lock' ? 'Lock identity' : 'Unlock identity'}
-              </h2>
-            </div>
-
-            <p className="text-sm text-neutral-500 mb-4">
-              {pinMode === 'lock'
-                ? 'Set a 4-digit PIN to prevent others from checking in as you.'
-                : 'Enter your PIN to change your identity.'}
-            </p>
-
-            <input
-              type="password"
-              inputMode="numeric"
-              maxLength={4}
-              placeholder="0000"
-              value={pinInput}
-              onChange={(e) => { setPinInput(e.target.value.replace(/\D/g, '').slice(0, 4)); setPinError('') }}
-              onKeyDown={(e) => { if (e.key === 'Enter') handlePinSubmit() }}
-              className="w-full p-3 border border-neutral-300 rounded-lg text-center text-2xl tracking-widest
-                focus:border-primary-500 focus:ring-2 focus:ring-primary-200 mb-3
-                placeholder:text-neutral-300"
-              autoFocus
-            />
-
-            {pinError && (
-              <p className="text-sm text-danger-600 mb-3">{pinError}</p>
-            )}
-
-            <div className="flex gap-3">
-              <Button
-                variant="ghost"
-                fullWidth
-                onClick={() => setShowPinEntry(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                fullWidth
-                disabled={pinInput.length !== 4}
-                onClick={handlePinSubmit}
-              >
-                {pinMode === 'lock' ? 'Lock' : 'Unlock'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   )
 }

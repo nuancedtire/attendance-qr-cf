@@ -1,29 +1,34 @@
 import { createServerFn } from '@tanstack/react-start'
-import type { D1Database } from '@cloudflare/workers-types'
 import { getDb } from '#/db/client'
-import type { Rota, RosterEntry } from '#/db/schema'
+import type { Rota } from '#/db/schema'
+import { rotas, rosterEntries } from '#/db/schema'
+import { eq, asc } from 'drizzle-orm'
+import type { DrizzleD1Database } from 'drizzle-orm/d1'
+import * as schema from '#/db/schema'
 import { parseRota } from './rotaParser'
 import { requireAdmin, deriveTokenForDate } from './auth'
 import { logAudit } from './audit'
 import { todayDate } from './dateTime'
 
-async function ensureRotaForDate(db: D1Database, date: string): Promise<Rota> {
+type Db = DrizzleD1Database<typeof schema>
+
+async function ensureRotaForDate(db: Db, date: string): Promise<Rota> {
   const existing = await db
-    .prepare('SELECT * FROM rotas WHERE date = ?')
-    .bind(date)
-    .first<Rota>()
+    .select()
+    .from(rotas)
+    .where(eq(rotas.date, date))
+    .get()
 
   if (existing) return existing
 
   const token = await deriveTokenForDate(date)
-  const result = await db
-    .prepare('INSERT INTO rotas (date, token) VALUES (?, ?)')
-    .bind(date, token)
-    .run<{ id: number }>()
+  const [inserted] = await db
+    .insert(rotas)
+    .values({ date, token })
+    .returning()
 
-  const id = result.meta?.last_row_id
-  if (!id) throw new Error('Failed to create rota')
-  return { id, date, token, created_at: new Date().toISOString() }
+  if (!inserted) throw new Error('Failed to create rota')
+  return inserted
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -35,23 +40,31 @@ export const getTodayRoster = createServerFn({ method: 'GET' }).handler(async ()
   const date = todayDate()
 
   const rota = await db
-    .prepare('SELECT * FROM rotas WHERE date = ?')
-    .bind(date)
-    .first<Rota>()
+    .select()
+    .from(rotas)
+    .where(eq(rotas.date, date))
+    .get()
 
   if (!rota) {
-    return { rota: null, entries: [] as RosterEntry[] }
+    return { rota: null, entries: [] as { id: number; name: string; role: string | null; shiftStart: string | null; shiftEnd: string | null; source: string }[] }
   }
 
   // Return only name/role/shift fields — no status data
   const entries = await db
-    .prepare(
-      'SELECT id, name, role, shift_start, shift_end, source FROM roster_entries WHERE rota_id = ? ORDER BY name',
-    )
-    .bind(rota.id)
-    .all<Pick<RosterEntry, 'id' | 'name' | 'role' | 'shift_start' | 'shift_end' | 'source'>>()
+    .select({
+      id: rosterEntries.id,
+      name: rosterEntries.name,
+      role: rosterEntries.role,
+      shiftStart: rosterEntries.shiftStart,
+      shiftEnd: rosterEntries.shiftEnd,
+      source: rosterEntries.source,
+    })
+    .from(rosterEntries)
+    .where(eq(rosterEntries.rotaId, rota.id))
+    .orderBy(asc(rosterEntries.name))
+    .all()
 
-  return { rota, entries: entries.results ?? [] }
+  return { rota, entries }
 })
 
 export const getQrTokenOrSeed = createServerFn({ method: 'GET' })
@@ -59,9 +72,10 @@ export const getQrTokenOrSeed = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     const db = await getDb()
     const rota = await db
-      .prepare('SELECT token FROM rotas WHERE date = ?')
-      .bind(data.date)
-      .first<{ token: string }>()
+      .select({ token: rotas.token })
+      .from(rotas)
+      .where(eq(rotas.date, data.date))
+      .get()
 
     // Only return a token if a rota already exists for this date
     if (!rota) return { token: null }
@@ -117,21 +131,19 @@ export const uploadRota = createServerFn({ method: 'POST' })
     const rota = await ensureRotaForDate(db, data.date)
 
     // Use D1 batch for atomicity — all or nothing
-    const statements: D1PreparedStatement[] = [
-      db.prepare('DELETE FROM roster_entries WHERE rota_id = ?').bind(rota.id),
-    ]
-
-    for (const entry of parsed) {
-      statements.push(
-        db
-          .prepare(
-            'INSERT INTO roster_entries (rota_id, name, role, shift_start, shift_end, source) VALUES (?, ?, ?, ?, ?, ?)',
-          )
-          .bind(rota.id, entry.name, entry.role || null, entry.shiftStart, entry.shiftEnd, 'rota'),
-      )
-    }
-
-    await db.batch(statements)
+    await db.batch([
+      db.delete(rosterEntries).where(eq(rosterEntries.rotaId, rota.id)),
+      db.insert(rosterEntries).values(
+        parsed.map((entry) => ({
+          rotaId: rota.id,
+          name: entry.name,
+          role: entry.role || null,
+          shiftStart: entry.shiftStart,
+          shiftEnd: entry.shiftEnd,
+          source: 'rota' as const,
+        })),
+      ),
+    ])
 
     await logAudit('rota_uploaded', { date: data.date, staffCount: parsed.length }, 'admin')
 
@@ -156,14 +168,19 @@ export const addAdHocStaff = createServerFn({ method: 'POST' })
 
     const rota = await ensureRotaForDate(db, date)
 
-    const result = await db
-      .prepare(
-        'INSERT INTO roster_entries (rota_id, name, role, shift_start, shift_end, source) VALUES (?, ?, ?, ?, ?, ?)',
-      )
-      .bind(rota.id, data.name, data.role || null, data.shiftStart || null, data.shiftEnd || null, 'manual')
-      .run<{ id: number }>()
+    const [inserted] = await db
+      .insert(rosterEntries)
+      .values({
+        rotaId: rota.id,
+        name: data.name,
+        role: data.role || null,
+        shiftStart: data.shiftStart || null,
+        shiftEnd: data.shiftEnd || null,
+        source: 'manual',
+      })
+      .returning({ id: rosterEntries.id })
 
-    const entryId = result.meta?.last_row_id
+    const entryId = inserted.id
 
     await logAudit(
       'adhoc_staff_added',
@@ -189,33 +206,19 @@ export const adminUpdateRosterEntry = createServerFn({ method: 'POST' })
     await requireAdmin({ token: data.authToken })
     const db = await getDb()
 
-    const sets: string[] = []
-    const binds: unknown[] = []
+    const updateData: Partial<typeof rosterEntries.$inferInsert> = {}
 
-    if (data.name !== undefined) {
-      sets.push('name = ?')
-      binds.push(data.name)
-    }
-    if (data.role !== undefined) {
-      sets.push('role = ?')
-      binds.push(data.role || null)
-    }
-    if (data.shiftStart !== undefined) {
-      sets.push('shift_start = ?')
-      binds.push(data.shiftStart || null)
-    }
-    if (data.shiftEnd !== undefined) {
-      sets.push('shift_end = ?')
-      binds.push(data.shiftEnd || null)
-    }
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.role !== undefined) updateData.role = data.role || null
+    if (data.shiftStart !== undefined) updateData.shiftStart = data.shiftStart || null
+    if (data.shiftEnd !== undefined) updateData.shiftEnd = data.shiftEnd || null
 
-    if (sets.length === 0) throw new Error('Nothing to update')
+    if (Object.keys(updateData).length === 0) throw new Error('Nothing to update')
 
-    binds.push(data.entryId)
     await db
-      .prepare(`UPDATE roster_entries SET ${sets.join(', ')} WHERE id = ?`)
-      .bind(...binds)
-      .run()
+      .update(rosterEntries)
+      .set(updateData)
+      .where(eq(rosterEntries.id, data.entryId))
 
     await logAudit(
       'roster_entry_updated',

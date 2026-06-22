@@ -1,87 +1,88 @@
-export const SCHEMA_SQL = `
-CREATE TABLE IF NOT EXISTS rotas (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  date TEXT NOT NULL UNIQUE,
-  token TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
+import { sql } from 'drizzle-orm'
+import {
+  sqliteTable,
+  integer,
+  text,
+  uniqueIndex,
+  index,
+  foreignKey,
+} from 'drizzle-orm/sqlite-core'
 
-CREATE TABLE IF NOT EXISTS roster_entries (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  rota_id INTEGER NOT NULL REFERENCES rotas(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  role TEXT,
-  shift_start TEXT,
-  shift_end TEXT,
-  source TEXT NOT NULL DEFAULT 'rota',
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
+export const rotas = sqliteTable('rotas', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  date: text('date').notNull().unique(),
+  token: text('token').notNull(),
+  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+})
 
-CREATE TABLE IF NOT EXISTS sessions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  roster_entry_id INTEGER NOT NULL,
-  check_in_at TEXT NOT NULL,
-  check_out_at TEXT,
-  qr_token_in TEXT,
-  qr_token_out TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (roster_entry_id) REFERENCES roster_entries(id)
-);
+export const rosterEntries = sqliteTable(
+  'roster_entries',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    rotaId: integer('rota_id').notNull(),
+    name: text('name').notNull(),
+    role: text('role'),
+    shiftStart: text('shift_start'),
+    shiftEnd: text('shift_end'),
+    source: text('source').notNull().default('rota'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (table) => ({
+    rotaFk: foreignKey({
+      columns: [table.rotaId],
+      foreignColumns: [rotas.id],
+    }).onDelete('cascade'),
+    rotaIdx: index('idx_roster_rota').on(table.rotaId),
+  }),
+)
 
--- Prevent duplicate open sessions (race-condition guard)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_one_open
-  ON sessions(roster_entry_id) WHERE check_out_at IS NULL;
+export const sessions = sqliteTable(
+  'sessions',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    rosterEntryId: integer('roster_entry_id').notNull(),
+    checkInAt: text('check_in_at').notNull(),
+    checkOutAt: text('check_out_at'),
+    qrTokenIn: text('qr_token_in'),
+    qrTokenOut: text('qr_token_out'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (table) => ({
+    entryFk: foreignKey({
+      columns: [table.rosterEntryId],
+      foreignColumns: [rosterEntries.id],
+    }),
+    entryIdx: index('idx_sessions_entry').on(table.rosterEntryId),
+    checkinIdx: index('idx_sessions_checkin').on(table.checkInAt),
+    entryOutIdx: index('idx_sessions_entry_out').on(
+      table.rosterEntryId,
+      table.checkOutAt,
+    ),
+    oneOpenUnique: uniqueIndex('idx_sessions_one_open')
+      .on(table.rosterEntryId)
+      .where(sql`check_out_at IS NULL`),
+  }),
+)
 
-CREATE TABLE IF NOT EXISTS audit_log (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  event TEXT NOT NULL,
-  details TEXT,
-  actor TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
+export const auditLog = sqliteTable(
+  'audit_log',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    event: text('event').notNull(),
+    details: text('details'),
+    actor: text('actor'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (table) => ({
+    createdIdx: index('idx_audit_created').on(table.createdAt),
+  }),
+)
 
-CREATE INDEX IF NOT EXISTS idx_roster_rota ON roster_entries(rota_id);
-CREATE INDEX IF NOT EXISTS idx_sessions_entry ON sessions(roster_entry_id);
-CREATE INDEX IF NOT EXISTS idx_sessions_checkin ON sessions(check_in_at);
--- Composite index for "who is in" / get-status queries
-CREATE INDEX IF NOT EXISTS idx_sessions_entry_out
-  ON sessions(roster_entry_id, check_out_at);
--- Index for audit log pruning and sorting
-CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
-`;
-
-export interface Rota {
-  id: number
-  date: string
-  token: string
-  created_at: string
-}
-
-export interface RosterEntry {
-  id: number
-  rota_id: number
-  name: string
-  role: string | null
-  shift_start: string | null
-  shift_end: string | null
-  source: 'rota' | 'manual'
-  created_at: string
-}
-
-export interface Session {
-  id: number
-  roster_entry_id: number
-  check_in_at: string
-  check_out_at: string | null
-  qr_token_in: string | null
-  qr_token_out: string | null
-  created_at: string
-}
-
-export interface AuditLog {
-  id: number
-  event: string
-  details: string | null
-  actor: string | null
-  created_at: string
-}
+export type Rota = typeof rotas.$inferSelect
+export type NewRota = typeof rotas.$inferInsert
+export type RosterEntry = typeof rosterEntries.$inferSelect
+export type NewRosterEntry = typeof rosterEntries.$inferInsert
+export type Session = typeof sessions.$inferSelect
+export type NewSession = typeof sessions.$inferInsert
+export type AuditLogEntry = typeof auditLog.$inferSelect
+export type NewAuditLogEntry = typeof auditLog.$inferInsert

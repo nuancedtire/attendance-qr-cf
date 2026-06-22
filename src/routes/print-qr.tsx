@@ -1,66 +1,67 @@
-import { useState, useEffect } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import QRCode from 'qrcode'
-import { QrCode, Printer, CalendarDays } from 'lucide-react'
-import { getQrTokenOrSeed } from '#/utils/rotas.functions'
-import { todayDate } from '#/utils/dateTime'
-import { ErrorFallback } from '#/components/ErrorFallback'
-import { EmptyState } from '#/components/EmptyState'
-import { Button } from '#/components/Button'
-import { usePersistentAdminAuth } from '#/routes/admin/-hooks'
+import { useState, useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import QRCode from "qrcode";
+import { QrCode, Printer, CalendarDays } from "lucide-react";
+import { getQrTokenOrSeed } from "#/utils/rotas.functions";
+import { todayDate } from "#/utils/dateTime";
+import { ErrorFallback } from "#/components/ErrorFallback";
+import { EmptyState } from "#/components/EmptyState";
+import { Button } from "#/components/Button";
+import { usePersistentAdminAuth } from "#/routes/admin/-hooks";
 
-export const Route = createFileRoute('/print-qr')({
+export const Route = createFileRoute("/print-qr")({
   component: PrintQrPage,
   errorComponent: ErrorFallback,
-})
+});
 
 function PrintQrPage() {
-  const { authenticated, authToken, pin, setPin, login, logout } = usePersistentAdminAuth()
-  const [date, setDate] = useState(todayDate())
-  const [qrUrl, setQrUrl] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [loginError, setLoginError] = useState('')
-  const [loginLoading, setLoginLoading] = useState(false)
+  const { authenticated, authToken, pin, setPin, login, logout } =
+    usePersistentAdminAuth();
+  const [date, setDate] = useState(todayDate());
+  const [qrUrl, setQrUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const generate = async (targetDate: string) => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const { token } = await getQrTokenOrSeed({ data: { date: targetDate } })
+      const { token } = await getQrTokenOrSeed({ data: { date: targetDate } });
       if (!token) {
-        setError('No rota for this date. Upload a rota first.')
-        setQrUrl('')
-        return
+        setError("No rota for this date. Upload a rota first.");
+        setQrUrl("");
+        return;
       }
-      const url = `${window.location.origin}/?token=${token}`
-      const dataUrl = await QRCode.toDataURL(url, { width: 800 })
-      setQrUrl(dataUrl)
+      const url = `${window.location.origin}/?token=${token}`;
+      const dataUrl = await QRCode.toDataURL(url, { width: 800 });
+      setQrUrl(dataUrl);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to generate QR')
-      setQrUrl('')
+      setError(e instanceof Error ? e.message : "Failed to generate QR");
+      setQrUrl("");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (authenticated && authToken) {
-      generate(date)
+      generate(date);
     }
-  }, [authenticated, authToken, date])
+  }, [authenticated, authToken, date]);
 
   const handleLogin = async () => {
-    setLoginLoading(true)
-    setLoginError('')
+    setLoginLoading(true);
+    setLoginError("");
     try {
-      await login(pin)
+      await login(pin);
     } catch (e) {
-      setLoginError(e instanceof Error ? e.message : 'Invalid PIN')
+      setLoginError(e instanceof Error ? e.message : "Invalid PIN");
     } finally {
-      setLoginLoading(false)
+      setLoginLoading(false);
     }
-  }
+  };
 
   if (!authenticated) {
     return (
@@ -68,8 +69,12 @@ function PrintQrPage() {
         <div className="w-full max-w-sm space-y-4">
           <div className="text-center">
             <QrCode className="w-12 h-12 mx-auto text-primary-600" />
-            <h1 className="text-xl font-bold mt-2 text-neutral-900">Print QR Code</h1>
-            <p className="text-sm text-neutral-500 mt-1">Enter admin PIN to access</p>
+            <h1 className="text-xl font-bold mt-2 text-neutral-900">
+              Print QR Code
+            </h1>
+            <p className="text-sm text-neutral-500 mt-1">
+              Enter admin PIN to access
+            </p>
           </div>
           <input
             type="password"
@@ -79,16 +84,18 @@ function PrintQrPage() {
             value={pin}
             onChange={(e) => setPin(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleLogin()
+              if (e.key === "Enter") handleLogin();
             }}
           />
-          {loginError && <p className="text-sm text-danger-600">{loginError}</p>}
+          {loginError && (
+            <p className="text-sm text-danger-600">{loginError}</p>
+          )}
           <Button fullWidth loading={loginLoading} onClick={handleLogin}>
             Unlock
           </Button>
         </div>
       </main>
-    )
+    );
   }
 
   return (
@@ -98,7 +105,9 @@ function PrintQrPage() {
         {/* Toolbar — hidden when printing */}
         <div className="print:hidden max-w-2xl mx-auto mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-lg font-bold text-neutral-900">Print QR Code</h1>
+            <h1 className="text-lg font-bold text-neutral-900">
+              Print QR Code
+            </h1>
             <div className="flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-neutral-400" />
               <input
@@ -131,25 +140,28 @@ function PrintQrPage() {
           </div>
         ) : error ? (
           <div className="max-w-md mx-auto mt-20 print:mt-0">
-            <EmptyState title="Cannot generate QR" description={error} icon="alert" />
+            <EmptyState
+              title="Cannot generate QR"
+              description={error}
+              icon="alert"
+            />
           </div>
         ) : qrUrl ? (
           <div className="print-content max-w-lg mx-auto">
             <div className="text-center mb-4">
-              <p className="text-lg font-bold text-neutral-900">Staff In &amp; Out</p>
+              <p className="text-lg font-bold text-neutral-900">
+                Staff In &amp; Out
+              </p>
               <p className="text-2xl font-bold text-neutral-900 mt-1">{date}</p>
-              <p className="text-sm text-neutral-500 mt-1">Scan to check in / out</p>
+              <p className="text-sm text-neutral-500 mt-1">
+                Scan to check in / out
+              </p>
             </div>
             <img
               src={qrUrl}
               alt={`QR code for ${date}`}
               className="w-full max-w-md mx-auto block"
             />
-            <p className="text-center text-xs text-neutral-400 mt-3 font-mono break-all">
-              {typeof window !== 'undefined'
-                ? `${window.location.origin}/?token=...`
-                : ''}
-            </p>
             {/* Dotted cut guide — visible in print */}
             <div className="mt-8 border-t-2 border-dashed border-neutral-300 print:border-neutral-400" />
           </div>
@@ -177,5 +189,5 @@ function PrintQrPage() {
         }
       `}</style>
     </>
-  )
+  );
 }

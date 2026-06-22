@@ -19,3 +19,9 @@ plan.html
 0
 sample-rota.csv
 sample-rota.xlsx
+# Package manager lockfiles (using pnpm)
+package-lock.json
+yarn.lock
+
+# Drizzle
+drizzle/migrations/meta

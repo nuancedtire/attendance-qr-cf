@@ -99,21 +99,21 @@ export function DailySummary({
           )}
         </div>
 
-        <div className="p-3 rounded-lg bg-warning-50 border border-warning-100">
+        <div className="p-3 rounded-lg bg-primary-50 border border-primary-100">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-4 h-4 text-warning-600" />
-            <span className="text-sm font-medium text-warning-900">Late arrivals</span>
-            <Badge variant="warning">{lateArrivals.length}</Badge>
+            <AlertTriangle className="w-4 h-4 text-primary-600" />
+            <span className="text-sm font-medium text-primary-900">Late arrivals</span>
+            <Badge variant="info">{lateArrivals.length}</Badge>
           </div>
           {lateArrivals.length === 0 ? (
-            <p className="text-sm text-warning-700">Everyone was on time.</p>
+            <p className="text-sm text-primary-700">Everyone was on time.</p>
           ) : (
             <ul className="space-y-1">
               {lateArrivals.map((p) => (
-                <li key={p.id} className="text-sm text-warning-800">
+                <li key={p.id} className="text-sm text-primary-800">
                   {p.name} {p.role ? `(${p.role})` : ''}
                   {p.checkInAt ? (
-                    <span className="text-warning-600 ml-1">— in at {formatTime(p.checkInAt)}</span>
+                    <span className="text-primary-600 ml-1">— in at {formatTime(p.checkInAt)}</span>
                   ) : null}
                 </li>
               ))}
@@ -121,21 +121,21 @@ export function DailySummary({
           )}
         </div>
 
-        <div className="p-3 rounded-lg bg-warning-50 border border-warning-100">
+        <div className="p-3 rounded-lg bg-neutral-100 border border-neutral-200">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-4 h-4 text-warning-600" />
-            <span className="text-sm font-medium text-warning-900">Early departures</span>
-            <Badge variant="warning">{earlyDepartures.length}</Badge>
+            <AlertTriangle className="w-4 h-4 text-neutral-500" />
+            <span className="text-sm font-medium text-neutral-700">Early departures</span>
+            <Badge variant="neutral">{earlyDepartures.length}</Badge>
           </div>
           {earlyDepartures.length === 0 ? (
-            <p className="text-sm text-warning-700">No one left early.</p>
+            <p className="text-sm text-neutral-600">No one left early.</p>
           ) : (
             <ul className="space-y-1">
               {earlyDepartures.map((p) => (
-                <li key={p.id} className="text-sm text-warning-800">
+                <li key={p.id} className="text-sm text-neutral-700">
                   {p.name} {p.role ? `(${p.role})` : ''}
                   {p.checkOutAt ? (
-                    <span className="text-warning-600 ml-1">— out at {formatTime(p.checkOutAt)}</span>
+                    <span className="text-neutral-500 ml-1">— out at {formatTime(p.checkOutAt)}</span>
                   ) : null}
                 </li>
               ))}

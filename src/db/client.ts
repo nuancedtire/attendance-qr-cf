@@ -1,21 +1,21 @@
 import type { D1Database } from '@cloudflare/workers-types'
+import { drizzle, type DrizzleD1Database } from 'drizzle-orm/d1'
+import * as schema from './schema'
 
-// ponytail: lazy dynamic import keeps cloudflare:workers out of the client bundle.
-// getDb() is only called inside createServerFn handlers (always async).
-let _db: D1Database | undefined
-let _dbPromise: Promise<D1Database> | undefined
+type Db = DrizzleD1Database<typeof schema>
 
-export async function getDb(): Promise<D1Database> {
-  if (_db) return _db
-  if (!_dbPromise) {
-    _dbPromise = import('cloudflare:workers').then(({ env }) => {
-      const db = env.DB as D1Database | undefined
-      if (!db) {
-        throw new Error('D1 database binding "DB" not found. Check wrangler.jsonc.')
-      }
-      _db = db
-      return db
+let _drizzle: Db | undefined
+let _drizzlePromise: Promise<Db> | undefined
+
+export async function getDb(): Promise<Db> {
+  if (_drizzle) return _drizzle
+  if (!_drizzlePromise) {
+    _drizzlePromise = import('cloudflare:workers').then(({ env }) => {
+      const db = (env as { DB?: D1Database }).DB
+      if (!db) throw new Error('D1 database binding "DB" not found. Check wrangler.jsonc.')
+      _drizzle = drizzle(db, { schema })
+      return _drizzle
     })
   }
-  return _dbPromise
+  return _drizzlePromise
 }

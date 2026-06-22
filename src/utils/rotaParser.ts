@@ -29,8 +29,11 @@ function looksLikeTier(value: string): boolean {
 }
 
 function looksLikeName(value: string): boolean {
-  // At least two alphabetic words, e.g. "Dr Fazeen", "Nurse Jones"
-  return /^[A-Za-z]+\.?\s+[A-Za-z\-'.]+$/.test(value) && value.length > 3
+  // Accept names with 2+ words, dots, hyphens, apostrophes
+  // Normalize whitespace first
+  const cleaned = value.replace(/\s{2,}/g, ' ').trim()
+  // Must have at least 2 characters and at least one letter
+  return cleaned.length >= 2 && /[A-Za-z]/.test(cleaned) && /^[A-Za-z]+[A-Za-z\s\-'./]+$/.test(cleaned)
 }
 
 function isTierGroup(value: string): boolean {
@@ -43,8 +46,9 @@ function looksLikeHeader(value: string): boolean {
 
 function parseShift(raw: string): { start: string | null; end: string | null } {
   const cleaned = raw.replace(/\s+/g, '').replace(/[\u2013\u2014]/g, '-')
-  const match = cleaned.match(/^(\d{1,2})[:\.]?(\d{2})?-(\d{1,2})[:\.]?(\d{2})?$/)
-  if (!match) return { start: null, end: null }
+  // Match time window anywhere in the string (allows trailing annotation text)
+  const match = cleaned.match(/(\d{1,2})[:\.]?(\d{2})?-(\d{1,2})[:\.]?(\d{2})?/)
+  if (!match || !match[1] || !match[3]) return { start: null, end: null }
 
   const [, startH, startM = '00', endH, endM = '00'] = match
   const start = `${startH.padStart(2, '0')}:${startM}`
@@ -84,7 +88,10 @@ export function parseRota(
     if (!Array.isArray(row)) continue
     const texts = row.map(getText)
     const nameIdx = texts.findIndex((t) => t.toLowerCase() === nameHeader.toLowerCase())
-    const shiftIdx = texts.findIndex((t) => t.toLowerCase() === shiftHeader.toLowerCase())
+    const shiftIdx = texts.findIndex((t) => {
+      const lower = t.toLowerCase()
+      return lower === shiftHeader.toLowerCase() || lower === 'time'
+    })
 
     if (nameIdx !== -1) {
       headerRow = i
@@ -111,14 +118,14 @@ export function parseRota(
     // Skip blank rows
     if (cells.every((c) => !c)) continue
 
+    // Skip tier grouping labels (Tier A, Tier B, TIER A, etc.)
+    if (isTierGroup(first)) continue
+
     // Section header (Consultants, Nurses, etc.)
     if (looksLikeTier(first)) {
       currentRole = first
       continue
     }
-
-    // Skip tier grouping labels (Tier A, Tier B)
-    if (isTierGroup(first)) continue
 
     // Skip rows that look like headers repeated
     if (cells.some(looksLikeHeader)) continue
