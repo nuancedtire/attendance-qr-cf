@@ -39,7 +39,7 @@
 
 ### ADR-004: Print-friendly admin QR page as standalone route
 
-**Decision:** `/admin/print-qr` — standalone route, same admin auth gate as `/admin`. Has date picker. `@media print` hides chrome, maximizes QR. URL displayed below QR as text fallback.
+**Decision:** `/print-qr` — standalone route, same admin auth gate as `/admin`. Has date picker. `@media print` hides chrome, maximizes QR. URL displayed below QR as text fallback.
 
 ### ADR-005: Consolidated cron-powered feature expansion via omp + ponytail (SUPERSEDED by ADR-006)
 

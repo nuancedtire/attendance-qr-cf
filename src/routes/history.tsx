@@ -10,7 +10,7 @@ import { Badge } from '#/components/Badge'
 import { IdentityBar } from '#/components/IdentityBar'
 import { useStaffIdentity } from '#/routes/-hooks'
 import { Clock, X, User, ArrowLeft } from 'lucide-react'
-type SessionRow = {
+type HistorySessionRow = {
   date: string
   shift_start: string | null
   shift_end: string | null
@@ -38,7 +38,7 @@ function HistoryPage() {
     setShowIdentityPicker,
   } = useStaffIdentity(entries as { id: number; name: string; role: string | null }[])
 
-  const [sessions, setSessions] = useState<SessionRow[]>([])
+  const [sessions, setSessions] = useState<HistorySessionRow[]>([])
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
 
