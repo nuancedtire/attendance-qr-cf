@@ -144,3 +144,64 @@ All previous 11 issues (#1–#11) verified as `ready-to-merge` (PRs opened, awai
 | #58 | #55, #56 | `agent/issue-group-55-design-cleanup` | Design cleanup — PWA manifest + box-shadow dedup |
 
 Build ✅. 7 files changed across manifest.json + 6 TSX components.
+
+---
+
+## 2026-06-23 — Phase A+B (cron run)
+
+**Phase A — Discovery:** Scanned all 8 categories post-refactor (Drizzle, shadcn, Airbnb redesign).
+
+**Closed as fixed on main:**
+- #59 (history.tsx design tokens) — verified using Airbnb neutral tokens on main. Closed.
+- #60 (qr.tsx design tokens) — verified using design tokens on main. Closed.
+- #42 (package-lock.json stale) — verified npm project, no pnpm lockfile. Closed.
+- #43 (NotFoundPage colors) — verified using design tokens on main. Closed.
+
+**Still valid (not on main, in PR branches):**
+- #55 (manifest.json) — theme_color #2563eb, name "Attendance QR". In PR #58.
+- #56 (box-shadow dedup) — hardcoded in Card.tsx, DailySummary.tsx, admin/index.tsx, roster.tsx, index.tsx. In PR #58.
+- #57 (DailySummary #2563eb) — line 133 accentColor. In PR #58.
+
+**New issues discovered and filed:**
+
+| # | Category | Title | Labels |
+|---|---|---|---|
+| #61 | design consistency | WhoIsInSection.tsx AVATAR_PALETTES still has old blue #2563eb | needs-triage, auto-fix |
+| #62 | duplication | ConfirmDialog state type duplicated inline in roster.tsx and sessions.tsx | needs-triage, auto-fix |
+| #63 | bug | print-qr.tsx missing QR URL text fallback below QR image | needs-triage, auto-fix |
+
+**Phase B — Implementation (1 PR):**
+
+| PR | Issues | Branch | Title |
+|---|---|---|---|
+| #64 | #61, #62, #63 | `agent/issue-group-61-code-cleanup` | Code quality cleanup — design tokens, type dedup, QR text fallback |
+
+Build ✅. 5 files, +16/−18 lines.
+
+---
+
+## 2026-06-23 — Phase A+B (cron run 2)
+
+**Phase A — Discovery:** Scanned all 8 categories. Verified all previous AUDIT.md items.
+
+**Items verified in PR branches (not on main):**
+- #55 (manifest.json), #56 (box-shadow), #57 (DailySummary #2563eb) — in PR #58
+- #61 (AVATAR_PALETTES), #62 (ConfirmDialog type), #63 (print-qr fallback) — in PR #64
+
+**New issues discovered and filed:**
+
+| # | Category | Title | Labels |
+|---|---|---|---|
+| #65 | design consistency | about.tsx uses raw neutral palette instead of semantic tokens | needs-triage, auto-fix |
+| #66 | design consistency | ErrorFallback.tsx uses raw neutral palette instead of semantic tokens | needs-triage, auto-fix |
+| #67 | design consistency | __root.tsx NotFoundPage and body use raw neutral palette instead of semantic tokens | needs-triage, auto-fix |
+
+**Phase B — Implementation (1 PR):**
+
+| PR | Issues | Branch | Title |
+|---|---|---|---|
+| #68 | #65, #66, #67 | `agent/issue-group-65-design-tokens-missed-pages` | Replace raw neutral palette with semantic tokens on missed pages |
+
+3 files, +18/−18. Build ✅.
+
+**Open PRs awaiting human merge:** #44, #45, #48, #49, #58, #64, #68

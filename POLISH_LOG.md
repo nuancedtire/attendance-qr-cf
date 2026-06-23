@@ -139,3 +139,49 @@ Issues #1–#6 filed with `auto-fix`; #7–#11 filed as `needs-triage` only.
 **Phase B — Implementation (1 PR):**
 
 - **PR #58 — Design cleanup (#55, #56):** Updated `manifest.json` (theme_color → #ff385c, name → InOut). Replaced 8 instances of hardcoded multi-layer box-shadow string with `var(--shadow-card)` CSS variable reference across 6 TSX files (Card, admin.tsx PIN gate, index.tsx swipe/checkin/manual cards, admin/index.tsx StatCard, DailySummary, WhoIsInSection). Also fixed incidental #57 color in DailySummary (late arrivals accent → warning-600). 7 files changed. Build ✅.
+
+---
+
+## 2026-06-22 (cron run — Phase A only)
+
+**Phase A — Discovery:** Post-massive-refactor scan (Drizzle, shadcn, pnpm, Airbnb redesign). Verified 3 open AUDIT.md items (#55–#57) — all fixed in PR #58 branch but not yet merged to main. Human had closed 15+ stale issues and has 5 PRs awaiting merge.
+
+**New issues:** Found 2 design consistency issues in secondary pages missed by the Airbnb redesign:
+- #59: history.tsx — 19 instances of old neutral Tailwind palette instead of design tokens
+- #60: qr.tsx — entire page uses old neutral palette and bg-white instead of design tokens
+
+**Phase B:** No `auto-fix` issues available. Nothing to implement.
+
+---
+
+## 2026-06-23 (cron run — Phase A+B)
+
+**Phase A — Discovery:** Scanned all 8 categories. Verified AUDIT.md items: #55 (manifest.json), #56 (box-shadow), #57 (DailySummary #2563eb) still valid — fixed in PR #58 branch, not on main. #59 (history.tsx) and #60 (qr.tsx) verified fixed on main — closed both. #42 (package-lock.json) verified correct (npm project) — closed. #43 (NotFoundPage) verified fixed on main — closed.
+
+**New issues discovered and filed:**
+- #61: WhoIsInSection.tsx AVATAR_PALETTES still has old blue #2563eb → `needs-triage, auto-fix`
+- #62: ConfirmDialog state type duplicated inline in roster.tsx and sessions.tsx → `needs-triage, auto-fix`
+- #63: print-qr.tsx missing QR URL text fallback per ADR-004 → `needs-triage, auto-fix`
+
+**Phase B — Implementation (1 PR):**
+
+| PR | Issues | Branch | Title |
+|---|---|---|---|
+| #64 | #61, #62, #63 | `agent/issue-group-61-code-cleanup` | Code quality cleanup — design tokens, type dedup, QR text fallback |
+
+5 files changed (+16/−18). Build ✅.
+
+## 2026-06-23 (cron run 2 — Phase A+B)
+
+**Phase A — Discovery:** Scanned all 8 categories. Verified items #55–#57 (PR #58) and #61–#63 (PR #64) still valid in branches.
+
+**New issues discovered and filed:**
+- #65: about.tsx uses raw neutral palette instead of semantic tokens → `needs-triage, auto-fix`
+- #66: ErrorFallback.tsx uses raw neutral palette instead of semantic tokens → `needs-triage, auto-fix`
+- #67: __root.tsx NotFoundPage and body use raw neutral palette instead of semantic tokens → `needs-triage, auto-fix`
+
+**Phase B — Implementation (1 PR):**
+
+- **PR #68 — Design tokens on missed pages (#65, #66, #67):** Replaced ~18 instances of raw `neutral-*` Tailwind classes with semantic design tokens (`text-ink`, `text-muted`, `text-muted-soft`, `text-body`, `bg-canvas`, `bg-surface-soft`, `bg-surface-strong`, `border-hairline`) across `about.tsx`, `ErrorFallback.tsx`, and `__root.tsx`. 3 files, +18/−18. Build ✅.
+
+**Open PRs awaiting human merge:** #44, #45, #48, #49, #58, #64, #68
