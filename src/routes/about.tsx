@@ -13,9 +13,9 @@ function About() {
           <div className="p-2 rounded-lg bg-primary-100 text-primary-600">
             <QrCode className="w-6 h-6" />
           </div>
-          <h1 className="text-3xl font-bold text-neutral-900">InOut</h1>
+          <h1 className="text-3xl font-bold text-ink">InOut</h1>
         </div>
-        <p className="text-neutral-600 leading-relaxed">
+        <p className="text-muted leading-relaxed">
           A lightweight staff in/out system built for hospital wards.
           Staff scan a daily QR code on the notice board to check in and out.
           Admin uploads the daily rota, and the system tracks who is present,
@@ -24,8 +24,8 @@ function About() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-neutral-900">How it works</h2>
-        <ul className="space-y-2 text-neutral-600">
+        <h2 className="text-lg font-semibold text-ink">How it works</h2>
+        <ul className="space-y-2 text-muted">
           <li className="flex gap-2">
             <span className="text-primary-500 font-bold shrink-0">1.</span>
             Admin uploads the daily staff rota (Excel or CSV).
@@ -46,14 +46,14 @@ function About() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-neutral-900">Stack</h2>
-        <p className="text-neutral-600">
+        <h2 className="text-lg font-semibold text-ink">Stack</h2>
+        <p className="text-muted">
           Built with TanStack Start, React 19, TypeScript, Tailwind CSS v4, Drizzle ORM.
           Deployed on Cloudflare Workers with D1 (SQLite).
         </p>
       </section>
 
-      <section className="pt-4 border-t border-neutral-200 space-y-3">
+      <section className="pt-4 border-t border-hairline space-y-3">
         <a
           href="https://github.com/nuancedtire/inout"
           target="_blank"
@@ -63,7 +63,7 @@ function About() {
           <ExternalLink className="w-4 h-4" />
           github.com/nuancedtire/inout
         </a>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted-soft">
           Maintained by Nous Research.
         </p>
       </section>
