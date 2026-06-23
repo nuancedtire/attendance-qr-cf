@@ -42,7 +42,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="bg-surface-soft text-ink">
+      <body className="bg-canvas text-ink">
         {children}
         <Scripts />
         <script
