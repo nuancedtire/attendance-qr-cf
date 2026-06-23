@@ -22,7 +22,7 @@ import { QrSection } from '#/routes/admin/-components/QrSection'
 import { RotaStaffSection } from '#/routes/admin/-components/RotaStaffSection'
 import { RosterSection } from '#/routes/admin/-components/RosterSection'
 import { WeeklyRollupSection } from '#/routes/admin/-components/WeeklyRollupSection'
-import { ConfirmDialog } from '#/components/ConfirmDialog'
+import { ConfirmDialog, type ConfirmDialogState } from '#/components/ConfirmDialog'
 import type { RosterEntryWithStatus } from '#/routes/admin/-types'
 import Papa from 'papaparse'
 
@@ -37,13 +37,7 @@ function AdminRoster() {
   const [entries, setEntries] = useState<RosterEntryWithStatus[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [confirmDialog, setConfirmDialog] = useState<{
-    title: string
-    message: string
-    confirmLabel: string
-    confirmVariant: 'danger' | 'warning'
-    onConfirm: () => Promise<void>
-  } | null>(null)
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>(null)
 
   const refresh = async () => {
     if (!authToken) return

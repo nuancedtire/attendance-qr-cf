@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from './Button'
 
-type ConfirmDialogState = {
+export type ConfirmDialogState = {
   title: string
   message: string
   confirmLabel: string

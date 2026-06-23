@@ -19,6 +19,7 @@ function PrintQrPage() {
     usePersistentAdminAuth();
   const [date, setDate] = useState(todayDate());
   const [qrUrl, setQrUrl] = useState("");
+  const [qrTextUrl, setQrTextUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loginError, setLoginError] = useState("");
@@ -32,14 +33,17 @@ function PrintQrPage() {
       if (!token) {
         setError("No rota for this date. Upload a rota first.");
         setQrUrl("");
+        setQrTextUrl("");
         return;
       }
       const url = `${window.location.origin}/?token=${token}`;
       const dataUrl = await QRCode.toDataURL(url, { width: 800 });
       setQrUrl(dataUrl);
+      setQrTextUrl(url);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to generate QR");
       setQrUrl("");
+      setQrTextUrl("");
     } finally {
       setLoading(false);
     }
@@ -162,6 +166,12 @@ function PrintQrPage() {
               alt={`QR code for ${date}`}
               className="w-full max-w-md mx-auto block"
             />
+            {/* Text URL fallback — scannable if QR is damaged */}
+            {qrTextUrl && (
+              <p className="mt-4 text-xs text-muted font-mono break-all text-center select-all">
+                {qrTextUrl}
+              </p>
+            )}
             {/* Dotted cut guide — visible in print */}
             <div className="mt-8 border-t-2 border-dashed border-neutral-300 print:border-neutral-400" />
           </div>

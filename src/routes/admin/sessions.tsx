@@ -6,7 +6,7 @@ import { useLoading } from '#/hooks/useLoading'
 import { useAutoDismiss } from '#/routes/admin/-hooks'
 import { MessageBanner } from '#/routes/admin/-components/MessageBanner'
 import { SessionSection } from '#/routes/admin/-components/SessionSection'
-import { ConfirmDialog } from '#/components/ConfirmDialog'
+import { ConfirmDialog, type ConfirmDialogState } from '#/components/ConfirmDialog'
 import type { SessionRow } from '#/routes/admin/-types'
 
 export const Route = createFileRoute('/admin/sessions')({
@@ -20,13 +20,7 @@ function AdminSessions() {
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [confirmDialog, setConfirmDialog] = useState<{
-    title: string
-    message: string
-    confirmLabel: string
-    confirmVariant: 'danger' | 'warning'
-    onConfirm: () => Promise<void>
-  } | null>(null)
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>(null)
 
   const refresh = async () => {
     if (!authToken) return

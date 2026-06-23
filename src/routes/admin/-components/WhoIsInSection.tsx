@@ -12,7 +12,7 @@ export type PresentStaff = {
 const AVATAR_PALETTES = [
   { bg: '#fff1f4', text: '#e00b41' },
   { bg: '#f0fdf4', text: '#16a34a' },
-  { bg: '#eff6ff', text: '#2563eb' },
+  { bg: '#f7f7f7', text: '#3f3f3f' },
   { bg: '#fef3c7', text: '#d97706' },
   { bg: '#f5f3ff', text: '#7c3aed' },
   { bg: '#fdf4ff', text: '#a21caf' },
