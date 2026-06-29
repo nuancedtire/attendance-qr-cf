@@ -161,19 +161,24 @@ export const uploadRota = createServerFn({ method: 'POST' })
     // Upsert rota (keeps deterministic token)
     const rota = await ensureRotaForDate(db, data.date)
 
-    // Use D1 batch for atomicity — all or nothing
+    const rows = parsed.map((entry) => ({
+      rotaId: rota.id,
+      name: entry.name,
+      role: entry.role || null,
+      shiftStart: entry.shiftStart,
+      shiftEnd: entry.shiftEnd,
+      source: 'rota' as const,
+    }))
+
+    // D1/SQLite caps bound parameters at 999; each row uses 6 → max 166 rows per
+    // statement. Chunk at 100 to stay well clear of the limit.
+    const CHUNK = 100
+    const chunks: (typeof rows)[] = []
+    for (let i = 0; i < rows.length; i += CHUNK) chunks.push(rows.slice(i, i + CHUNK))
+
     await db.batch([
       db.delete(rosterEntries).where(eq(rosterEntries.rotaId, rota.id)),
-      db.insert(rosterEntries).values(
-        parsed.map((entry) => ({
-          rotaId: rota.id,
-          name: entry.name,
-          role: entry.role || null,
-          shiftStart: entry.shiftStart,
-          shiftEnd: entry.shiftEnd,
-          source: 'rota' as const,
-        })),
-      ),
+      ...chunks.map((chunk) => db.insert(rosterEntries).values(chunk)),
     ])
 
     await logAudit('rota_uploaded', { date: data.date, staffCount: parsed.length }, 'admin')

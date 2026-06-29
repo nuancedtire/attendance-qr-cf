@@ -82,7 +82,7 @@ function TabsTrigger({
 
   const indicatorCls =
     variant === 'segment'
-      ? 'absolute inset-0 -z-10 rounded-lg bg-canvas shadow-sm'
+      ? 'absolute inset-0 -z-10 rounded-lg bg-canvas shadow ring-1 ring-black/[0.06]'
       : variant === 'underline'
         ? 'absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500'
         : 'absolute inset-0 -z-10 rounded-lg bg-primary-100'
