@@ -11,6 +11,7 @@ import {
   SidebarFooter,
   useSidebar,
 } from '#/components/ui/sidebar'
+import { useIsMobile } from '#/hooks/use-mobile'
 import { LayoutDashboard, ClipboardList, Users, ScrollText, PanelLeftClose } from 'lucide-react'
 import { Logo } from '#/components/Logo'
 
@@ -22,9 +23,13 @@ const navItems = [
 ]
 
 export function AppSidebar() {
+  const isMobile = useIsMobile()
   const router = useRouterState()
   const currentPath = router.location.pathname
   const { setOpen } = useSidebar()
+
+  // On mobile the AdminDock handles navigation — no sidebar needed
+  if (isMobile) return null
 
   return (
     <Sidebar collapsible="icon">

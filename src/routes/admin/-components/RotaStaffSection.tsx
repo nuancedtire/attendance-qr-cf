@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { motion } from 'motion/react'
 import { Button } from '#/components/Button'
 import { formatDate } from '#/utils/dateTime'
 import { Upload, UserPlus } from 'lucide-react'
@@ -26,31 +27,33 @@ export function RotaStaffSection({
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
+  const pillId = 'rota-staff-tab-pill'
+
   return (
     <section id="rota-staff" className="bg-white p-4 rounded-xl shadow-md border border-neutral-200">
       <div className="flex gap-1 mb-3 border-b border-neutral-200 pb-2">
-        <button
-          onClick={() => setTab('upload')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            tab === 'upload'
-              ? 'bg-primary-100 text-primary-700'
-              : 'text-neutral-600 hover:bg-neutral-100'
-          }`}
-        >
-          <Upload className="w-3.5 h-3.5" />
-          Upload rota
-        </button>
-        <button
-          onClick={() => setTab('add')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            tab === 'add'
-              ? 'bg-primary-100 text-primary-700'
-              : 'text-neutral-600 hover:bg-neutral-100'
-          }`}
-        >
-          <UserPlus className="w-3.5 h-3.5" />
-          Add staff
-        </button>
+        {([
+          { value: 'upload', icon: Upload, label: 'Upload rota' },
+          { value: 'add', icon: UserPlus, label: 'Add staff' },
+        ] as const).map(({ value, icon: Icon, label }) => (
+          <button
+            key={value}
+            onClick={() => setTab(value)}
+            className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+              tab === value ? 'text-primary-700' : 'text-neutral-600 hover:bg-neutral-100'
+            }`}
+          >
+            {tab === value && (
+              <motion.span
+                layoutId={pillId}
+                transition={{ type: 'spring', stiffness: 360, damping: 32, mass: 0.6 }}
+                className="absolute inset-0 -z-10 rounded-lg bg-primary-100"
+              />
+            )}
+            <Icon className="w-3.5 h-3.5" />
+            {label}
+          </button>
+        ))}
       </div>
 
       {tab === 'upload' ? (

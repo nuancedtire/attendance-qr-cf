@@ -9,6 +9,11 @@
   box-sizing: border-box;
 }
 
+/* iOS safe-area bottom padding for the dock */
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
 html,
 body,
 #app {
