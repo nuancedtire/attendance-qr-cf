@@ -55,7 +55,11 @@ export function RotaStaffSection({
 
       {tab === 'upload' ? (
         <div>
-          <p className="text-sm text-neutral-500 mb-3">for {formatDate(date)}</p>
+          <p className="text-sm text-neutral-500 mb-1">for {formatDate(date)}</p>
+          <p className="text-xs text-neutral-400 mb-3">
+            Supports the allocation sheet format (.xlsx) or a simple CSV/Excel with Name, Role, Shift columns.{' '}
+            <a href="/example-allocation-filled.xlsx" download className="text-primary-600 hover:underline">Download example</a>
+          </p>
           <input
             ref={fileInputRef}
             type="file"
