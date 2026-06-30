@@ -70,7 +70,10 @@ function AdminRoster() {
 
   const handleUpload = async (file: File) => {
     const arrayBuffer = await file.arrayBuffer()
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+    const bytes = new Uint8Array(arrayBuffer)
+    let binary = ''
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i])
+    const base64 = btoa(binary)
 
     await withLoading('upload', async () => {
       const result = await uploadRota({
@@ -239,7 +242,6 @@ function AdminRoster() {
         <RotaStaffSection
           onUpload={handleUpload}
           onAdd={handleAddStaff}
-          uploadLoading={loading['upload'] ?? false}
           addLoading={loading['addStaff'] ?? false}
           date={viewDate}
         />

@@ -1,8 +1,8 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getDb } from '#/db/client'
 import type { Rota } from '#/db/schema'
-import { rotas, rosterEntries } from '#/db/schema'
-import { eq, asc } from 'drizzle-orm'
+import { rotas, rosterEntries, sessions } from '#/db/schema'
+import { eq, asc, desc, inArray, isNotNull } from 'drizzle-orm'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import * as schema from '#/db/schema'
 import { parseRota } from './rotaParser'
@@ -46,10 +46,13 @@ export const getTodayRoster = createServerFn({ method: 'GET' }).handler(async ()
     .get()
 
   if (!rota) {
-    return { rota: null, entries: [] as { id: number; name: string; role: string | null; shiftStart: string | null; shiftEnd: string | null; source: string }[] }
+    return {
+      rota: null,
+      entries: [] as { id: number; name: string; role: string | null; shiftStart: string | null; shiftEnd: string | null; source: string }[],
+      statusByEntryId: {} as Record<number, { checkedIn: boolean; sessionId: number | null; checkInAt: string | null; hasUndoableAction: boolean }>,
+    }
   }
 
-  // Return only name/role/shift fields — no status data
   const entries = await db
     .select({
       id: rosterEntries.id,
@@ -64,7 +67,42 @@ export const getTodayRoster = createServerFn({ method: 'GET' }).handler(async ()
     .orderBy(asc(rosterEntries.name))
     .all()
 
-  return { rota, entries }
+  const sessionsResult = entries.length > 0
+    ? await db
+        .select({
+          rosterEntryId: sessions.rosterEntryId,
+          id: sessions.id,
+          checkInAt: sessions.checkInAt,
+          checkOutAt: sessions.checkOutAt,
+        })
+        .from(sessions)
+        .where(inArray(
+          sessions.rosterEntryId,
+          db.select({ id: rosterEntries.id }).from(rosterEntries).where(eq(rosterEntries.rotaId, rota.id)),
+        ))
+        .orderBy(desc(sessions.id))
+        .all()
+    : []
+
+  const latestByEntry = new Map<number, { id: number; checkInAt: string; checkOutAt: string | null }>()
+  for (const s of sessionsResult) {
+    if (!latestByEntry.has(s.rosterEntryId)) {
+      latestByEntry.set(s.rosterEntryId, { id: s.id, checkInAt: s.checkInAt, checkOutAt: s.checkOutAt })
+    }
+  }
+
+  const statusByEntryId: Record<number, { checkedIn: boolean; sessionId: number | null; checkInAt: string | null; hasUndoableAction: boolean }> = {}
+  for (const entry of entries) {
+    const latest = latestByEntry.get(entry.id)
+    statusByEntryId[entry.id] = {
+      checkedIn: latest ? latest.checkOutAt === null : false,
+      sessionId: latest && latest.checkOutAt === null ? latest.id : null,
+      checkInAt: latest && latest.checkOutAt === null ? latest.checkInAt : null,
+      hasUndoableAction: latest !== undefined,
+    }
+  }
+
+  return { rota, entries, statusByEntryId }
 })
 
 export const getQrTokenOrSeed = createServerFn({ method: 'GET' })
@@ -123,20 +161,23 @@ export const uploadRota = createServerFn({ method: 'POST' })
     // Upsert rota (keeps deterministic token)
     const rota = await ensureRotaForDate(db, data.date)
 
-    // Use D1 batch for atomicity — all or nothing
-    await db.batch([
-      db.delete(rosterEntries).where(eq(rosterEntries.rotaId, rota.id)),
-      db.insert(rosterEntries).values(
-        parsed.map((entry) => ({
-          rotaId: rota.id,
-          name: entry.name,
-          role: entry.role || null,
-          shiftStart: entry.shiftStart,
-          shiftEnd: entry.shiftEnd,
-          source: 'rota' as const,
-        })),
-      ),
-    ])
+    const rows = parsed.map((entry) => ({
+      rotaId: rota.id,
+      name: entry.name,
+      role: entry.role || null,
+      shiftStart: entry.shiftStart,
+      shiftEnd: entry.shiftEnd,
+      source: 'rota' as const,
+    }))
+
+    // D1 caps bound parameters at 100 per statement. Each row here has 6 cols,
+    // so max 16 rows per INSERT (floor(100/6)). Use 10 to stay safely under.
+    // Sequential calls (not db.batch) since batch also aggregates the param
+    // count across all statements and hits the same 100-param ceiling.
+    await db.delete(rosterEntries).where(eq(rosterEntries.rotaId, rota.id))
+    for (let i = 0; i < rows.length; i += 10) {
+      await db.insert(rosterEntries).values(rows.slice(i, i + 10))
+    }
 
     await logAudit('rota_uploaded', { date: data.date, staffCount: parsed.length }, 'admin')
 

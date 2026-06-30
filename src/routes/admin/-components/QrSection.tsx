@@ -41,7 +41,7 @@ export function QrSection({
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
         <div className="w-full sm:w-auto">
           <label className="text-xs block text-muted mb-1">Date</label>
-          <DatePicker value={viewDate} onChange={onDateChange} />
+          <DatePicker value={viewDate} onChange={onDateChange} className="py-2.5 px-4" />
         </div>
         <Button onClick={generate} loading={loading} variant="secondary">
           Generate / refresh QR

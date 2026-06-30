@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createFileRoute, Outlet, useRouterState } from '@tanstack/react-router'
 import { SidebarProvider } from '#/components/ui/sidebar'
 import { AppSidebar } from '#/routes/admin/-components/AppSidebar'
+import { AdminDock } from '#/routes/admin/-components/AdminDock'
 import { AdminContext, type AdminContextValue } from '#/routes/admin/-context'
 import { usePersistentAdminAuth, useAutoDismiss } from '#/routes/admin/-hooks'
 import { useLoading } from '#/hooks/useLoading'
@@ -74,7 +75,6 @@ function AdminLayout() {
             <input
               id="pin-input"
               type="password"
-              inputMode="numeric"
               placeholder="••••"
               aria-label="Admin PIN"
               className="w-full px-4 py-3 text-lg tracking-widest border border-hairline rounded-xl mb-4 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-center transition-all"
@@ -125,10 +125,11 @@ function AdminLayout() {
             onToday={() => setViewDate(today)}
             onLogout={logout}
           />
-          <div className="flex-1 p-4 sm:p-6">
+          <div className="flex-1 p-4 sm:p-6 pb-24 sm:pb-6">
             <Outlet />
           </div>
         </main>
+        <AdminDock />
       </SidebarProvider>
     </AdminContext.Provider>
   )
