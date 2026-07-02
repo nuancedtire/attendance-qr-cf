@@ -32,6 +32,7 @@ export function QrSection({
         <h2 className="font-semibold text-neutral-900">QR code</h2>
         <Link
           to="/print-qr"
+          data-tour="qr-print-link"
           className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium"
         >
           <Printer className="w-3.5 h-3.5" />
@@ -43,7 +44,7 @@ export function QrSection({
           <label className="text-xs block text-muted mb-1">Date</label>
           <DatePicker value={viewDate} onChange={onDateChange} className="py-2.5 px-4" />
         </div>
-        <Button onClick={generate} loading={loading} variant="secondary">
+        <Button onClick={generate} loading={loading} variant="secondary" data-tour="qr-generate-button">
           Generate / refresh QR
         </Button>
       </div>

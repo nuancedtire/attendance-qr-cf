@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { X, ArrowLeft, ArrowRight } from 'lucide-react'
+import { X, ArrowLeft, ArrowRight, MousePointerClick } from 'lucide-react'
 import { useTour } from '#/lib/tour/TourContext'
 import { SPRING_PANEL } from '#/lib/ease'
 
@@ -105,6 +105,18 @@ export function TourOverlay() {
     }
   }, [active, step, reduceMotion])
 
+  // For requireClick steps, advance as soon as the real target is clicked —
+  // the target stays genuinely reachable through the overlay (see the mask
+  // render below), so this fires alongside the page's own click handler.
+  useEffect(() => {
+    if (!active || !step?.requireClick || !resolved) return
+    const el = resolveTarget(step.target)
+    if (!el) return
+    const onTargetClick = () => next()
+    el.addEventListener('click', onTargetClick)
+    return () => el.removeEventListener('click', onTargetClick)
+  }, [active, step, resolved, next])
+
   // Recompute on resize while a target is active. Scroll isn't tracked here:
   // the backdrop blocks background interaction, and our own scrollIntoView
   // call (above) already fires scroll events — listening for those too would
@@ -173,15 +185,51 @@ export function TourOverlay() {
   if (!active || !step || !resolved) return null
 
   const isLast = stepIndex === totalSteps - 1
+  const clickThrough = !!step.requireClick && !!rect
+  const maskColor = 'rgba(20,20,20,0.6)'
 
   return createPortal(
     <div
       className="fixed inset-0 z-[200]"
       onClick={(e) => e.stopPropagation()}
       role="presentation"
+      style={{ pointerEvents: clickThrough ? 'none' : 'auto' }}
     >
       {/* Backdrop + spotlight cutout */}
-      {rect ? (
+      {clickThrough && rect ? (
+        // requireClick steps: 4 masking strips leave a genuine gap over the
+        // target so the real click reaches the real element underneath,
+        // instead of the usual single click-blocking overlay. The wrapper
+        // above is pointer-events:none (inherited by these too, since
+        // pointer-events inherits) so each strip must opt back into 'auto'.
+        <>
+          {(() => {
+            const holeTop = rect.top - SPOTLIGHT_PADDING
+            const holeLeft = rect.left - SPOTLIGHT_PADDING
+            const holeRight = rect.left + rect.width + SPOTLIGHT_PADDING
+            const holeBottom = rect.top + rect.height + SPOTLIGHT_PADDING
+            return (
+              <>
+                <div className="fixed" style={{ top: 0, left: 0, width: '100%', height: Math.max(0, holeTop), background: maskColor, pointerEvents: 'auto' }} onClick={(e) => e.stopPropagation()} />
+                <div className="fixed" style={{ top: holeBottom, left: 0, width: '100%', height: `calc(100vh - ${holeBottom}px)`, background: maskColor, pointerEvents: 'auto' }} onClick={(e) => e.stopPropagation()} />
+                <div className="fixed" style={{ top: holeTop, left: 0, width: Math.max(0, holeLeft), height: holeBottom - holeTop, background: maskColor, pointerEvents: 'auto' }} onClick={(e) => e.stopPropagation()} />
+                <div className="fixed" style={{ top: holeTop, left: holeRight, width: `calc(100vw - ${holeRight}px)`, height: holeBottom - holeTop, background: maskColor, pointerEvents: 'auto' }} onClick={(e) => e.stopPropagation()} />
+              </>
+            )
+          })()}
+          <motion.div
+            className={`fixed rounded-2xl ring-2 ring-primary-500 pointer-events-none ${reduceMotion ? '' : 'animate-pulse'}`}
+            initial={false}
+            animate={{
+              top: rect.top - SPOTLIGHT_PADDING,
+              left: rect.left - SPOTLIGHT_PADDING,
+              width: rect.width + SPOTLIGHT_PADDING * 2,
+              height: rect.height + SPOTLIGHT_PADDING * 2,
+            }}
+            transition={reduceMotion ? { duration: 0 } : SPRING_PANEL}
+          />
+        </>
+      ) : rect ? (
         <motion.div
           className="fixed rounded-2xl ring-2 ring-primary-500"
           initial={false}
@@ -219,6 +267,7 @@ export function TourOverlay() {
             left: cardPos?.left ?? -9999,
             visibility: cardPos ? 'visible' : 'hidden',
             transition: reduceMotion ? undefined : 'top 300ms ease, left 300ms ease',
+            pointerEvents: 'auto',
           }}
         >
           <div className="flex items-start justify-between gap-3 mb-3">
@@ -261,13 +310,20 @@ export function TourOverlay() {
               <button onClick={skip} className="text-sm text-muted hover:text-ink transition-colors">
                 Skip
               </button>
-              <button
-                onClick={next}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 active:scale-[0.98] transition-all"
-              >
-                {isLast ? 'Finish' : 'Next'}
-                {!isLast && <ArrowRight className="w-3.5 h-3.5" />}
-              </button>
+              {step.requireClick ? (
+                <span className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-primary-600">
+                  <MousePointerClick className="w-3.5 h-3.5" />
+                  Click above to continue
+                </span>
+              ) : (
+                <button
+                  onClick={next}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 active:scale-[0.98] transition-all"
+                >
+                  {isLast ? 'Finish' : 'Next'}
+                  {!isLast && <ArrowRight className="w-3.5 h-3.5" />}
+                </button>
+              )}
             </div>
           </div>
         </motion.div>

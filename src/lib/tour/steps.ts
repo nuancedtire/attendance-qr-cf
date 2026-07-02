@@ -1,6 +1,6 @@
 // Bump this when step content changes meaningfully, so admins who've already
 // seen the tour are re-prompted for the new material.
-export const TOUR_VERSION = 1
+export const TOUR_VERSION = 2
 
 export type TourStep = {
   id: string
@@ -9,6 +9,8 @@ export type TourStep = {
   target: string[] | null
   title: string
   body: string
+  /** If true, the target itself must be clicked to advance — Next is replaced with a hint, and the spotlighted element stays genuinely clickable through the overlay. */
+  requireClick?: boolean
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -48,11 +50,19 @@ export const TOUR_STEPS: TourStep[] = [
     body: 'The Roster page is where you upload the daily rota, register locums and ad-hoc staff, and manage everyone scheduled for the day. Click Next to head there.',
   },
   {
-    id: 'qr-code',
+    id: 'qr-generate',
     path: '/admin/roster',
-    target: ['[data-tour="qr-code"]'],
+    target: ['[data-tour="qr-generate-button"]'],
     title: 'The check-in QR code',
-    body: 'Generate the daily QR code here and print it (via the Print link) for the notice board. Staff scan it with their phone to check in and out — no app required.',
+    body: "This is how staff check in — no app required, just a phone camera. Click 'Generate / refresh QR' to see it.",
+    requireClick: true,
+  },
+  {
+    id: 'qr-print',
+    path: '/admin/roster',
+    target: ['[data-tour="qr-print-link"]'],
+    title: 'Print it for the notice board',
+    body: "Once generated, use Print to get a clean, printer-friendly version with a large QR code — put it up where staff clock in and out.",
   },
   {
     id: 'rota-upload',
